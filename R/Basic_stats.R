@@ -4,17 +4,25 @@ library(tidyverse)
 library(cowplot)
 library(vcfR)
 library(fields)
-# library(here)
+library(here)
 library(dartR)
 library(LEA)
 
 theme_set(theme_cowplot())
 
-setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/PAC_project")
+## This code does the following:
+##     1. Calculate proportions of missing data from PAUP* output file
+##     2. Calculate average read depth from iPyrad stats files
 
-## We're working with two datasets that differ in how much missing data they contain:
-##      min10K dataset contains samples that have at least 10K SNPs (max missing data >99%) (n=325)
-##      80p dataset contains samples that contain at most 80% missing data (n=242)
+##    FILES REQUIRED:
+##          pooled_missing.txt
+##          
+
+##  Although there is only a single pooled assembly, some individuals needed to be removed
+##  from the pooled assembly based on how much missing data they contained. Two subsets of
+##  samples were created from the pooled assembly:
+##      min_500 dataset contains samples that have at least 500 SNPs (n=595)
+##      80p dataset contains samples that contain at most 80% missing data (n=414)
 
 
 # Process input data ------------------------------------------------------
@@ -24,6 +32,13 @@ strata <- read_tsv("PAC_min10K_metadata.txt", col_names = TRUE) %>%
   rename(order = "order_vcf")
 
 # Remove individuals with lots of missing data using vcftools
+
+
+# Calculate average depth -------------------------------------------------
+
+
+
+
 
 
 # Run NJ tree -------------------------------------------------------------
