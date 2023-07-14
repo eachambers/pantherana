@@ -6,9 +6,8 @@ library(here)
 ##     1. Removes potentially invariant sites from Phylip files for input into RAxML.
 
 ##    FILES REQUIRED:
-##          rana_n-1.snps_min500.phy
-##          rana_n-1.snps_min10K.phy
-##          rana_n-1.snps_max80p.phy
+##          rana_n-1.snps_min500.phy; from Dryad (not on Github)
+##          rana_n-1.snps_max80p.phy; from Dryad (not on Github)
 
 
 # Load required functions -------------------------------------------------
@@ -275,10 +274,9 @@ dat$nsites # 350,292 / 350,267
 
 # Remove invariant sites --------------------------------------------------
 
-dat_invar <- RemoveInvariantSites(SNPdataset = dat, chatty = TRUE) # removed 103,616 / XXX of 350,292 sites
+dat_invar <- RemoveInvariantSites(SNPdataset = dat, chatty = TRUE) # removed 103,616 / 139,073 of 350,292 / 350,267 sites
 
 # Write out files ---------------------------------------------------------
 
 # WriteSNP(dat_invar, file = here("data", "rana_n-1.snps_min500_invarrem.phy"), missing = "N")
-# WriteSNP(dat_invar, file = here("data", "rana_n-1.snps_min10K_invarrem.phy"), missing = "N")
 WriteSNP(dat_invar, file = here("data", "rana_n-1.snps_max80p_invarrem.phy"), missing = "N")
