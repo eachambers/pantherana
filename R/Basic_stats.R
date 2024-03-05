@@ -3,13 +3,12 @@ library(here)
 
 theme_set(theme_cowplot())
 setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Pooled_assembly/iPyrad/outfiles/stats_files")
+setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Separate_assemblies/iPyrad/")
 
 ## This code does the following:
-##     1. Calculate proportions of missing data from PAUP* output file
-##     2. Calculate average read depth from iPyrad stats files
+##     Calculate average read depth from iPyrad stats files
 
 ##    FILES REQUIRED:
-##          *_missing.txt # for pooled, ATL_MXPL, PAC_FOOT, and PAC_XX
 ##          pooled_dataset_assignments.txt
 ##          All s3 stats files from iPyrad output (located: Pooled_assembly/iPyrad/outfiles/stats_files/; not on Github)
 
@@ -17,52 +16,11 @@ setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Pooled_assembly/iPyrad/outfiles
 ##  from the pooled assembly based on how much missing data they contained. Two subsets of
 ##  samples were created from the pooled assembly:
 ##      min_500 dataset contains samples that have at least 500 SNPs (n=595)
+##      min_10K dataset contains samples that have at least 10K SNPs (n=555)
 ##      80p dataset contains samples that contain at most 80% missing data (n=414)
 
 
-# Calculate average missing data ------------------------------------------
-
-### FOR POOLED DATASETS:
-
-miss <- read_tsv(here("data", "pooled_missing.txt"), col_names = TRUE)
-
-# Average missing data across all 632 samples
-miss %>% summarize(mean(percent_missing))
-
-# For min_500 dataset:
-miss %>% 
-  dplyr::filter(pooled_dataset != "remove") %>% 
-  summarize(mean_snps = mean(no_sites_present),
-            min_snps = min(no_sites_present),
-            max_snps = max(no_sites_present),
-            mean(percent_missing),
-            min_miss = min(percent_missing),
-            max_miss = max(percent_missing),
-            no_inds = n())
-
-# For max_80p dataset:
-miss %>% 
-  dplyr::filter(pooled_dataset == "max_80p") %>% 
-  summarize(mean_snps = mean(no_sites_present),
-            min_snps = min(no_sites_present),
-            max_snps = max(no_sites_present),
-            mean(percent_missing),
-            min_miss = min(percent_missing),
-            max_miss = max(percent_missing),
-            no_inds = n())
-
-### FOR SEPARATE ASSEMBLIES:
-
-miss_atl <- read_tsv(here("data", "ATL_MXPL_missing.txt"), col_names = TRUE)
-miss_atl %>% 
-  summarize(avg_perc_miss = mean(percent_missing),
-            avg_snps = mean(no_sites_present),
-            min_snps = min(no_sites_present),
-            max_snps = max(no_sites_present))
-
-
-
-# 2. Calculate average depth -------------------------------------------------
+# Calculate average depth -------------------------------------------------
 
 #' Helper function to read tables and make sample ID a column
 #'

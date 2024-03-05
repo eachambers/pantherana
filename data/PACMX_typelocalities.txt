@@ -1,0 +1,13 @@
+Species	Latitude	Longitude
+forreri	23.60761	-106.021376
+magnaocularis	26.733103	-108.314481
+spectabilis	20.171387	-98.756413
+yavapaiensis	34	-112.2667
+macroglossa	14.746828	-91.161644
+omiltemana	17.56	-99.69
+Atenquique_short	19.527987	-103.44055
+Atenquique_long	18.388683	-98.304836
+cora	22.006194	-105.336167
+adleri	24.802104	-107.50915
+hillisi	16.756111	-99.751667
+floresi	19.8819778	-105.1102778

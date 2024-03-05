@@ -1,0 +1,151 @@
+library(algatr) # devtools::install_github("TheWangLab/algatr")
+library(terra)
+library(raster)
+library(tidyverse)
+library(here)
+library(RStoolbox) # devtools::install_github("bleutner/RStoolbox")
+library(viridis)
+library(cowplot)
+theme_set(theme_cowplot())
+setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
+
+## This code processes environmental data used for landscape genomic analyses for the R. forreri complex:
+##     (1) Retrieve metadata
+##     (2) Retrieve environmental data
+##     (3) Check for collinearity among enviro layers
+##     (4) Run raster PCA
+##     (5) Export data
+##     (6) Map out raster PCA results (Fig. SX)
+
+##    FILES REQUIRED:
+##          Site data for forreri samples (forreri_sites.txt)
+
+##    FILES GENERATED:
+##          forreri_envlayers.tif
+##          forreri_envpcs_results.txt
+
+
+# (1) Retrieve metadata ---------------------------------------------------
+
+sites <- readr::read_tsv(here("data", "forreri_sites.txt"),
+                         col_names = TRUE) %>% 
+  dplyr::rename(x = long,
+                y = lat)
+
+# names <- samps$Bioinformatics_ID
+
+
+# (2) Retrieve enviro data ------------------------------------------------
+
+# Retrieve worldclim tiles for coords
+env <- algatr::get_worldclim(coords = sites %>% dplyr::select(x, y),
+                             res = 0.5,
+                             buff = 0.01,
+                             save_output = TRUE)
+
+# Take a look at WorldClim tiles that were retrieved
+plot(env[[1]], col = magma(100), axes = FALSE)
+points(coords, pch = 19)
+
+
+# (3) Check for collinearity ----------------------------------------------
+
+cors_env <- algatr::check_env(env) # 31 pairs of vars had correlation coefficients > 0.7.
+dist <- as.data.frame(cors_env$cor_matrix)
+write_csv(dist, file = "forreri_cors_env.csv", col_names = TRUE)
+
+# Take a look at the collinearity among layers
+dist %>%
+  tibble::rownames_to_column("sample") %>%
+  tidyr::gather("sample_comp", "dist", -"sample") %>%
+  ggplot2::ggplot(ggplot2::aes(x = sample, y = sample_comp, fill = dist)) +
+  ggplot2::geom_tile() +
+  ggplot2::coord_equal() +
+  viridis::scale_fill_viridis(option = "magma") +
+  ggplot2::xlab("Sample") +
+  ggplot2::ylab("Sample") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+
+
+# (4) Raster PCA ----------------------------------------------------------
+
+env_pcs <- RStoolbox::rasterPCA(env, spca = TRUE)
+
+# Let's take a look at the results for the top three PCs
+plots <- lapply(1:3, function(x) RStoolbox::ggR(env_pcs$map, x, geom_raster = TRUE))
+plots[[1]] 
+plots[[2]] 
+plots[[3]]
+
+# Plot the PCA itself
+pcs <- terra::as.data.frame(env_pcs$map, xy = TRUE)
+
+# How much variance is explained by each env PC?
+summary(env_pcs$model) # <- made this into a txt file externally called "forreri_envpcs_results.txt"
+
+dat <- readr::read_tsv(here("data", "forreri_envpcs_results.txt"), col_names = TRUE) %>% 
+  tidyr::pivot_longer(cols = Comp.1:Comp.19,
+                      names_to = "comp",
+                      values_to = "value")
+
+dat$comp <- as.character(dat$comp)
+dat$comp <- factor(dat$comp, levels = c("Comp.1", "Comp.2", "Comp.3",
+                                        "Comp.4", "Comp.5", "Comp.6",
+                                        "Comp.7", "Comp.8", "Comp.9",
+                                        "Comp.10", "Comp.11", "Comp.12",
+                                        "Comp.13", "Comp.14", "Comp.15",
+                                        "Comp.16", "Comp.17", "Comp.18",
+                                        "Comp.19"))
+# Visualize results
+dat %>% 
+  dplyr::filter(Statistic == "Prop_variance") %>% 
+  ggplot(aes(x = comp, y = value)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Env PC comparison") +
+  ylab("Proportion of variance")
+
+# Get statistics on proportion of variance explained
+dat %>% 
+  filter(Statistic=="Prop_variance") %>% 
+  filter(comp=="Comp.1" | comp=="Comp.2" | comp=="Comp.3") %>% 
+  summarize(top3 = sum(value)) # 85% explained by top 3 PCs
+
+
+# (5) Save data -----------------------------------------------------------
+
+# Save env layers
+terra::writeRaster(env, file = "forreri_envlayers.tif",
+                   overwrite = TRUE)
+
+# Save top 3 env PCs
+lapply(1:3, function(x) terra::writeRaster(env_pcs$map[[x]],
+                                           file = paste0("PC_layers/forreri_PC", x, ".tif"),
+                                           overwrite = TRUE))
+
+# Stack the top 3 env PCs and save as a single raster
+forr_env <- raster::stack(list.files("./PC_layers/", full.names = TRUE))
+raster::writeRaster(forr_env, "forreri_PCenv.tif", overwrite = TRUE)
+
+
+# (6) Plot raster PCA results ---------------------------------------------
+
+# If you haven't run the above, can just start with:
+# forr_env <- raster::stack(list.files("./PC_layers/", full.names = TRUE))
+# pcs <- as.data.frame(forr_env, xy = TRUE)
+
+# Take a look at PCs 1 and 2 plotted
+p_hex12 <-
+  pcs %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_hex() +
+  coord_equal() +
+  scale_fill_viridis(option = "A") # export 8x6
+
+# Do the following each of the top three PCs
+pcs %>% 
+  ggplot() +
+  geom_raster(mapping = aes(x = x, y = y, fill = PC1)) +
+  scale_fill_viridis(option = "viridis", na.value = "white", name = "PC1 loading") +
+  coord_fixed() +
+  theme_map() # export 10x8

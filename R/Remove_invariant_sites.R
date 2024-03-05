@@ -1,14 +1,14 @@
 library(ape)
 library(devtools)
-library(here)
+# setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Pooled_assembly/iPyrad/outfiles")
+setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Separate_assemblies/iPyrad/")
 
-## This code does the following:
-##     1. Removes potentially invariant sites from Phylip files for input into RAxML.
+## This code removes potentially invariant sites from Phylip files for input into RAxML.
 
 ##    FILES REQUIRED:
-##          rana_n-1.snps_min500.phy; from Dryad (not on Github)
+##          rana_n-1.snps_min10K.phy; from Dryad (not on Github)
 ##          rana_n-1.snps_max80p.phy; from Dryad (not on Github)
-
+# TODO include separate assembly phylips on here if I go that direction
 
 # Load required functions -------------------------------------------------
 
@@ -24,12 +24,11 @@ library(here)
 #' the "M" is uncertain and is an "A" then it is not variable.
 #' 
 #' @param SNPdataset SNP data in the class "matrix", "data.frame", or "snp"
-#' @param chatty Optional print to screen messages
+#' @param chatty optional print to screen messages (defaults to FALSE)
 #' @export
 #' @return Returns a subset dataset with only variable sites (i.e., SNPs).
 #' @seealso \link{ReadSNP} \link{WriteSNP} \link{IsVariable}
-#' @examples
-RemoveInvariantSites <- function(SNPdataset, chatty=FALSE){
+RemoveInvariantSites <- function(SNPdataset, chatty = FALSE){
   snpclass <- "table"
   if(class(SNPdataset) == "snp"){
     snpclass <- "snp"
@@ -40,7 +39,7 @@ RemoveInvariantSites <- function(SNPdataset, chatty=FALSE){
   splitdata <- SplitSNP(SNPdataset) # split each SNP into a column; this takes a long time
   KeepVector <- apply(splitdata, 2, IsVariable) # determine which SNPs to keep depending on whether they're variable or not
   breaks <- which(splitdata[1,] == " ")
-  newSNPdataset <- cSNP(splitdata, KeepVector=KeepVector, maintainLoci=TRUE) # make new SNP dataset with only variable sites
+  newSNPdataset <- cSNP(splitdata, KeepVector = KeepVector, maintainLoci=TRUE) # make new SNP dataset with only variable sites
   newsnps <- sum(nchar(newSNPdataset[1,]))
   if(chatty)
     message(paste("removed", snps-newsnps, "of", snps, "sites"))
@@ -57,34 +56,30 @@ RemoveInvariantSites <- function(SNPdataset, chatty=FALSE){
 #'
 #' @return
 #' @export
-#'
-#' @examples
 GetLinesToSkip <- function(file){
-  a <- length(suppressWarnings(system(paste("grep 'ID:' ", file, sep=""), intern=TRUE)))
-  b <- length(suppressWarnings(system(paste("grep ^[#+] ", file, sep=""), intern=TRUE)))
+  a <- length(suppressWarnings(system(paste("grep 'ID:' ", file, sep = ""), intern = TRUE)))
+  b <- length(suppressWarnings(system(paste("grep ^[#+] ", file, sep = ""), intern = TRUE)))
   c <- 0
-  return(a+b+c)
+  return(a + b + c)
 }
 
 #' Read in alignment file and convert to SNP file
 #'
 #' @param file input alignment file
-#' @param row.names 
-#' @param preprocess 
+#' @param row.names defaults to 1
+#' @param preprocess defaults to TRUE
 #' @param fileFormat specifies file format (options: "character", "phy", "nex", "data.frame")
-#' @param extralinestoskip if the first line of file has something other than data, it must be skipped
+#' @param extralinestoskip if the first line of file has something other than data, it must be skipped (defaults to 0)
 #'
 #' @return
 #' @export
-#'
-#' @examples
-ReadSNP <- function(file, row.names=1, preprocess=TRUE, fileFormat=NULL, extralinestoskip=0){
+ReadSNP <- function(file, row.names = 1, preprocess = TRUE, fileFormat = NULL, extralinestoskip = 0){
   if(class(file) == "character"){
     inputFileType <- fileFormat
     if(is.null(inputFileType))
       inputFileType <- FileFormat(file)
     if(inputFileType == "phy"){
-      initializeTable <- read.table(file, row.names=row.names, skip=GetLinesToSkip(file)+extralinestoskip, stringsAsFactors=FALSE, colClasses=c("character"))
+      initializeTable <- read.table(file, row.names = row.names, skip = GetLinesToSkip(file) + extralinestoskip, stringsAsFactors = FALSE, colClasses = c("character"))
     }
     if(inputFileType == "nex")
       initializeTable <- ConvertNexDataToPhyData(read.nexus.data(file))
@@ -92,20 +87,20 @@ ReadSNP <- function(file, row.names=1, preprocess=TRUE, fileFormat=NULL, extrali
       stop("Having a hard time reading the file")
   }
   if(class(file) == "data.frame" || class(file) == "matrix"){
-    initializeTable <- data.frame(lapply(file, as.character), stringsAsFactors=FALSE)
+    initializeTable <- data.frame(lapply(file, as.character), stringsAsFactors = FALSE)
     rownames(initializeTable) <- rownames(file)
   }
-  colnames(initializeTable) <- paste("locus", 1:ncol(initializeTable), sep="")
+  colnames(initializeTable) <- paste("locus", 1:ncol(initializeTable), sep = "")
   if(preprocess){
     if(any(which(initializeTable == "_"))){
-      underscores <- which(initializeTable == "_", arr.ind=T)
-      initializeTable <- initializeTable[,-unique(underscores[,2])]
+      underscores <- which(initializeTable == "_", arr.ind = T)
+      initializeTable <- initializeTable[,-unique(underscores[, 2])]
     }
   }
   ntax <- dim(initializeTable)[1]
   nloci <- dim(initializeTable)[2]
   nsites <- nchar(initializeTable[1,])
-  snpdata <- list(data=as.data.frame(initializeTable), ntax=ntax, nloci=nloci, nsites=nsites)
+  snpdata <- list(data = as.data.frame(initializeTable), ntax = ntax, nloci = nloci, nsites = nsites)
   class(snpdata) <- "snp"
   return(snpdata)
 }
@@ -116,8 +111,6 @@ ReadSNP <- function(file, row.names=1, preprocess=TRUE, fileFormat=NULL, extrali
 #'
 #' @return
 #' @export
-#'
-#' @examples
 SplitSNP <- function(SNPdataset){
   snpclass <- "table"
   if(class(SNPdataset) == "snp"){
@@ -172,8 +165,6 @@ cSNP <- function(splitSNP, KeepVector=NULL, maintainLoci=TRUE){
 #'
 #' @return
 #' @export
-#'
-#' @examples
 IsVariable <- function(SNP){
   var <- FALSE
   bases <- c("A", "C", "G", "T", "U")
@@ -199,8 +190,6 @@ IsVariable <- function(SNP){
 #'
 #' @return
 #' @export
-#'
-#' @examples
 ReturnNucs <- function(NucCode, forSNAPP=FALSE) {
   possibilities <- NULL
   if(NucCode == "A" || NucCode == "G" || NucCode == "C" || NucCode == "T" || NucCode == "U")
@@ -231,8 +220,6 @@ ReturnNucs <- function(NucCode, forSNAPP=FALSE) {
 #'
 #' @return
 #' @export
-#'
-#' @examples
 WriteSNP <- function(SNPdataset, file="", format="phylip", missing="N"){
   if(class(SNPdataset) == "snp")
     SNPdataset <- SNPdataset$data
@@ -259,24 +246,26 @@ WriteSNP <- function(SNPdataset, file="", format="phylip", missing="N"){
   }
 }
 
-# Run functions ------------------------------------------------------------
+# Function to run above functions -----------------------------------------
 
-# ReadSNP will be run first, since we need to convert our nexus/phylip files into SNP ones
-# Need to skip first line because it doesn't contain data
-# This will take a little while
-# MAKE SURE TO DO THE FOLLOWING ON ALL THREE FILES!
-# dat <- ReadSNP(file = here("data", "rana_n-1.snps_min500.phy"), extralinestoskip = 1, fileFormat = "phy")
-dat <- ReadSNP(file = here("data", "rana_n-1.snps_max80p.phy"), extralinestoskip = 1, fileFormat = "phy")
+run_invarrem <- function(input_file, extralinestoskip = 1, fileFormat = "phy", chatty = TRUE, output_file) {
 
-# Can check that ReadSNP worked:
-dat$ntax # 595 / 414
-dat$nsites # 350,292 / 350,267
+  # Run ReadSNP to convert from phylip to SNP -------------------------------
+  dat <- ReadSNP(file = input_file,
+                 extralinestoskip = extralinestoskip,
+                 fileFormat = fileFormat)
+  
+  # print("Number of taxa in SNP file: ", dat$ntax)
+  # print("Number of sites in SNP file: ", dat$nsites)
+  
+  dat_invar <- RemoveInvariantSites(SNPdataset = dat, chatty = chatty)
+  WriteSNP(dat_invar, file = output_file, missing = "N")
+}
 
-# Remove invariant sites --------------------------------------------------
+# Run function ------------------------------------------------------------
 
-dat_invar <- RemoveInvariantSites(SNPdataset = dat, chatty = TRUE) # removed 103,616 / 139,073 of 350,292 / 350,267 sites
-
-# Write out files ---------------------------------------------------------
-
-# WriteSNP(dat_invar, file = here("data", "rana_n-1.snps_min500_invarrem.phy"), missing = "N")
-WriteSNP(dat_invar, file = here("data", "rana_n-1.snps_max80p_invarrem.phy"), missing = "N")
+run_invarrem(input_file = "../Raw_data/78-Hetaerina/78-Hetaerina.pruned.phy",
+             extralinestoskip = 1,
+             fileFormat = "phy",
+             chatty = TRUE,
+             output_file = "../Raw_data/78-Hetaerina/78-Hetaerina.pruned_invarrem.phy")
