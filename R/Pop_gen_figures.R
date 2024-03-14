@@ -95,9 +95,9 @@ forreri <- list(K2 = forreri[[1]], K3 = forreri[[2]], K4 = forreri[[3]], K5 = fo
 
 # Set which element of the list produced above (K-value) you want plotted
 # for a given assembly:
-dat = atlmx$K7
+# dat = atlmx$K7
 # dat = centam$K4
-# dat = pacmx$K6
+dat = pacmx$K6
 # dat = forreri$K5
 
 if (dataset_name == "ATL_MXPL") dat <- dat %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
@@ -124,7 +124,7 @@ p <- build_str_plot(dat = dat,
 
 # dat = atlmx$K6
 # dat = centam$K4
-# dat = pacmx$K8
+# dat = pacmx$K6
 dat = forreri$K5
 
 # Also provide the dataset name
@@ -336,5 +336,3 @@ ggplot() +
   geom_point(data = tls, aes(Longitude, Latitude), size = 2, color = "red") +
   coord_fixed() +
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
-
-

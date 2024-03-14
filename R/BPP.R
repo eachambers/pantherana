@@ -1,6 +1,9 @@
 library(tidyverse)
 library(here)
 library(cowplot)
+library(maps)
+library(mxmaps) # devtools::install_github("diegovalle/mxmaps")
+library(usmap)
 theme_set(theme_cowplot())
 setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 
@@ -9,6 +12,7 @@ setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 ##    (1) Gathers loci numbers from the lmiss Plink report
 ##    (2) Generate Imap file from ADMIXTURE results
 
+# TODO fix below
 ##    FILES REQUIRED:
 ##            forreri.ustr # n=104
 ##            forreri_noNAs.ustr # n=XX, created below
@@ -22,7 +26,7 @@ setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 # (1) Retrieve loci numbers -----------------------------------------------
 
 # Specify dataset
-lmiss_prefix = "spp_delim/spectabilis" # forreri_0.75miss_ldp / foothills / spectabilis / forreri_0.25miss_ldp / forreri_0.5miss_ldp
+lmiss_prefix = "spp_delim/mxpl" # forreri_0.75miss_ldp / foothills / forreri_0.25miss_ldp / forreri_0.5miss_ldp / mxpl
 
 # Get the missing data report generated
 lmiss <- read.table(paste0(lmiss_prefix, ".lmiss"), header = TRUE) %>% 
@@ -43,16 +47,16 @@ source(here("R", "Pop_gen.R"))
 source(here("R", "rana_colors.R"))
 setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Separate_assemblies/ADMIXTURE/")
 
-dataset_name = "spectabilis" # forreri / foothills / spectabilis / berlandieri
+dataset_name = "mxpl" # forreri / foothills / mxpl
 
 if (dataset_name == "foothills") metadata <- read_tsv(paste0(here("data"), "/PACMX_metadata.txt"), col_names = TRUE)
 if (dataset_name == "forreri") metadata <- read_tsv(paste0(here("data"), "/forreri_metadata.txt"), col_names = TRUE)
-if (dataset_name == "spectabilis" | dataset_name == "berlandieri") metadata <- read_tsv(paste0(here("data"), "/ATL_MXPL_metadata.txt"), col_names = TRUE)
+if (dataset_name == "mxpl") metadata <- read_tsv(paste0(here("data"), "/ATL_MXPL_metadata.txt"), col_names = TRUE)
+
 if (dataset_name == "forreri") colvals = c("hilli" = "#428b9b", "miad" = "#73806d", "arce" = "#d2a3a6", "forr" = "gray74", "flor" = "gray30")
 if (dataset_name == "foothills") colvals = c("omig" = "#a8a2ca", "magn" = "#f7cd5e", "omio" = "#ba94a6", 
                                              "yava" = "#054051", "ates" = "#c0a06f", "atel" = "#428b9b")
-if (dataset_name == "spectabilis") colvals = c("spec" = "#80a4bc", "chic" = "#6f82b7")
-if (dataset_name == "berlandieri") colvals = c("berl" = "#984625", "neov" = "#e97490")
+if (dataset_name == "mxpl") colvals = c("spec" = "#80a4bc", "chic" = "#6f82b7", "berl" = "#984625", "neov" = "#e97490")
 
 dat <- retrieve_kcols(dataset = "spp_delim", dataset_name, save_imap = TRUE)
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
@@ -90,11 +94,21 @@ if (dataset_name == "foothills") {
     bind_rows(map_data, states)
 }
 
+if (dataset_name == "mxpl") {
+  # Include TX
+  include <- c("texas")
+  # Get polygons for mapping
+  states <- map_data("state") %>% 
+    filter(region %in% include)
+  map_data <-
+    bind_rows(map_data, states)
+}
+
 map_data %>% 
   ggplot() +
   geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.5) + 
   theme_map() +
-  geom_point(data = final, aes(long, lat, color = pop), size = 4) +
+  geom_point(data = final, aes(long, lat, color = pop), size = 2) + # if mxpl, size = 3
   scale_color_manual(values = colvals) +
   coord_fixed() +
   theme(legend.position = "none") # export 6x4
@@ -103,6 +117,7 @@ map_data %>%
 # Build chord diagrams ----------------------------------------------------
 
 library(circlize)
+library(RColorBrewer)
 
 estM <- read_csv(here("data", "forreri_K5_merge_estM.txt")) %>% 
   dplyr::select(-`...4`)

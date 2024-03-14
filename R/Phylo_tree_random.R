@@ -23,12 +23,12 @@ ggplot(tree)
 
 ## Check node numbering
 ggtree(tree) +
-  geom_text2(aes(subset = !isTip, label=node)) +
-  geom_tiplab(size=2)
+  geom_text2(aes(subset = !isTip, label = node)) +
+  geom_tiplab(size = 2)
 
 ## Root the tree
 tree_rooted <- root(tree, node = 925, edgelabel = TRUE)
 
 ggtree(tree_rooted) +
-  geom_text2(aes(subset = !isTip, label=node)) +
-  geom_tiplab(size=2)
+  geom_text2(aes(subset = !isTip, label = node)) +
+  geom_tiplab(size = 2)

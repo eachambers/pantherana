@@ -88,47 +88,28 @@ retrieve_kcols <- function(K_value, dataset, dataset_name = "ATL_MXPL", save_ima
                                         max_K == "X5" ~ "gray30"))
       if (save_imap) write_tsv(kcols %>% dplyr::select(Bioinformatics_ID, pop), paste0("../../Landgen/spp_delim/", dataset_name, "-Imap.txt"), col_names = FALSE)
     }
-    if (dataset_name == "spectabilis") {
-      atlmx <- import_admix_data(path = ".", file = "ATL_MXPL/ATL_MXPL_relaxed_0.25miss_ldp", K_values = 5)
-      dat = atlmx[[1]]
-      kcols <-
-        dat %>% 
-        dplyr::mutate(pop = case_when(max_K == "X1" ~ "chic",
-                                      max_K == "X2" ~ "macr",
-                                      max_K == "X3" ~ "berl",
-                                      max_K == "X4" ~ "macr2",
-                                      max_K == "X5" ~ "spec"),
-                      kcols = case_when(max_K == "X1" ~ "#6f82b7",
-                                        max_K == "X2" ~ "#e0895a",
-                                        max_K == "X3" ~ "#984625",
-                                        max_K == "X4" ~ "#e0b693",
-                                        max_K == "X5" ~ "#80a4bc")) %>% 
-        dplyr::filter(pop == "chic" | pop == "spec")
-      if (save_imap) write_tsv(kcols %>% dplyr::select(Bioinformatics_ID, pop), paste0("../../Landgen/spp_delim/", dataset_name, "-Imap.txt"), col_names = FALSE)
-    }
-    if (dataset_name == "berlandieri") {
-      atlmx <- import_admix_data(path = ".", file = "ATL_MXPL/ATL_MXPL_relaxed_0.25miss_ldp", K_values = 7)
+    if (dataset_name == "mxpl") {
+      atlmx <- import_admix_data(path = ".", file = "ATL_MXPL/ATL_MXPL_relaxed_0.25miss_ldp", K_values = 6)
       dat = atlmx[[1]]
       kcols <-
         dat %>% 
         dplyr::filter(Bioinformatics_ID != "IRL57_LCA") %>% 
-        dplyr::mutate(pop = case_when(max_K == "X1" ~ "spec",
+        dplyr::mutate(pop = case_when(max_K == "X1" ~ "macr2",
                                       max_K == "X2" ~ "macr",
-                                      max_K == "X3" ~ "tayl",
-                                      max_K == "X4" ~ "macr2",
-                                      max_K == "X5" ~ "berl",
-                                      max_K == "X6" ~ "neov",
-                                      max_K == "X7" ~ "chic"),
-                      kcols = case_when(max_K == "X1" ~ "#80a4bc",
+                                      max_K == "X3" ~ "berl",
+                                      max_K == "X4" ~ "spec",
+                                      max_K == "X5" ~ "chic",
+                                      max_K == "X6" ~ "neov"),
+                      kcols = case_when(max_K == "X1" ~ "#e0b693",
                                         max_K == "X2" ~ "#e0895a",
-                                        max_K == "X3" ~ "#c8b656",
-                                        max_K == "X4" ~ "#e0b693",
-                                        max_K == "X5" ~ "#984625",
-                                        max_K == "X6" ~ "#e97490",
-                                        max_K == "X7" ~ "#6f82b7")) %>% 
-        dplyr::filter(pop == "berl" | pop == "neov")
+                                        max_K == "X3" ~ "#984625",
+                                        max_K == "X4" ~ "#80a4bc",
+                                        max_K == "X5" ~ "#6f82b7",
+                                        max_K == "X6" ~ "#e97490")) %>% 
+        dplyr::filter(pop == "chic" | pop == "spec" | pop == "neov" | pop == "berl")
       if (save_imap) write_tsv(kcols %>% dplyr::select(Bioinformatics_ID, pop), paste0("../../Landgen/spp_delim/", dataset_name, "-Imap.txt"), col_names = FALSE)
     }
+    
     if (dataset_name == "foothills") {
       pacmx <- import_admix_data(path = ".", file = "PACMX/new_PACMX_relaxed_0.25miss_ldp", K_values = 6)
       dat = pacmx[[1]]
