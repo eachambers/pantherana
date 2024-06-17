@@ -6,7 +6,7 @@ V2706_Rfor_PAC	PuenteMadreVieja	Chiapas
 V2707_Rfor_PAC	PuenteMadreVieja	Chiapas
 V2708_Rfor_PAC	PuenteMadreVieja	Chiapas
 V2709_Rfor_PAC	PuenteMadreVieja	Chiapas
-V2695_Rfor_PAC	PuenteZanatepec	Oaxaca
+V2695_Rfor_PAC	PuentelosAmates	Oaxaca
 V2699_Rfor_PAC	PuentelosAmates	Oaxaca
 V2700_Rfor_PAC	PuentelosAmates	Oaxaca
 T3611_PAC	ElCogul	Oaxaca

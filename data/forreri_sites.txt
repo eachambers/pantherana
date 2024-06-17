@@ -77,7 +77,7 @@ TF8651_Rspe_CMX	PteTehuantepec	Oaxaca
 TF8652_Rspe_CMX	PteTehuantepec	Oaxaca
 TF8653_Rspe_CMX	PteTehuantepec	Oaxaca
 V2691_Rfor_PAC	PteZanatepec	Oaxaca
-V2695_Rfor_PAC	PteZanatepec	Oaxaca
+V2695_Rfor_PAC	PtelosAmates	Oaxaca
 V1311_PAC	RanchoJuliaCarrillo	Colima
 V1312_PAC	RanchoJuliaCarrillo	Colima
 V2594_Rfor_PAC	RioelAmate_3	Guerrero

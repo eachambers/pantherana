@@ -26,7 +26,7 @@ setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 # (1) Retrieve loci numbers -----------------------------------------------
 
 # Specify dataset
-lmiss_prefix = "spp_delim/mxpl" # forreri_0.75miss_ldp / foothills / forreri_0.25miss_ldp / forreri_0.5miss_ldp / mxpl
+lmiss_prefix = "spp_delim/forreri_0.6miss_ldp" # forreri_0.75miss_ldp / foothills / forreri_0.6miss_ldp / mxpl
 
 # Get the missing data report generated
 lmiss <- read.table(paste0(lmiss_prefix, ".lmiss"), header = TRUE) %>% 
