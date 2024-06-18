@@ -15,7 +15,7 @@ library(here)
 library(cowplot)
 library(SNPRelate)
 theme_set(theme_cowplot())
-setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
+# setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 
 ## This code performs land gen analyses related to testing for IBD in the R. forreri complex:
 ##     (1) Calculate site-based genetic distances
@@ -275,7 +275,7 @@ IBD # Mantel stat r = 0.7699, sig=0.001
 # (4) Run MMRR ------------------------------------------------------------
 
 # Load env data
-forr_env <- raster::stack(list.files("PC_layers/", full.names = TRUE))
+forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
 forr_env <- raster::readAll(forr_env)
 
 # Extract enviro vars (3 enviro PCs for each site coordinate)
