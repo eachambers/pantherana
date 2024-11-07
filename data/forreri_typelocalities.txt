@@ -1,5 +1,5 @@
 Species	Latitude	Longitude
-forreri	23.60761	-106.021376
+forreri	23.190325	-106.222463
 cora	22.006194	-105.336167
 adleri	24.802104	-107.50915
 hillisi	16.756111	-99.751667

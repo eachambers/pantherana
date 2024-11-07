@@ -1,5 +1,5 @@
-# "#80a4bc" = spectabilis spectabilis
-# "#6f82b7" = spectabilis chichicuahutla
+# "#80a4bc" = spectabilis
+# "#6f82b7" = chichicuahutla
 # "#e0895a" = macroglossa
 # "#e0b693" = macroglossa2
 # "#a8a2ca" = omiltemana oaxaca
@@ -19,7 +19,7 @@
 # "#3b808f" = forreri hillisi
 # "#924c62" = lenca
 # "#c8b656" = taylori
-
+# "#d2a3a6" = Arcelia form
 
 #' Retrieve colors for plotting Rana analyses
 #'

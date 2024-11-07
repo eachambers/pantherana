@@ -4,6 +4,12 @@ library(ggplot2)
 library(cowplot)
 theme_set(theme_cowplot())
 
+## The following file builds Fig. S2: the taxonomic history of the leopard frog species complex.
+
+##    FILES REQUIRED:
+##            rana_taxonomy.txt # Taxonomic history of the group
+
+
 tax <- read_tsv(here("data", "rana_taxonomy.txt"), col_names = TRUE)
 
 plot <-
@@ -35,9 +41,3 @@ plot <-
   geom_vline(xintercept = 2024, linetype = "dashed", color = "#787878")
 
 # export plot at 10x6"
-
-# "#abb285", "#ccb3d7", "#88a1c6", "#f39e87"
-# 
-# "#054051", "#376988", "#3fa28a", "#82ccc8", "#e0b693", "#c1847e", "#f4a8ab", "#b83247"
-# 
-# "#80312c", "#a35e41", "#3771b3", "#a7778d", "#7e968a", "#5c6854", "#ae9a81"

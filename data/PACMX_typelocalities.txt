@@ -1,5 +1,5 @@
 Species	Latitude	Longitude
-forreri	23.60761	-106.021376
+forreri	23.190325	-106.222463
 magnaocularis	26.733103	-108.314481
 spectabilis	20.171387	-98.756413
 yavapaiensis	34	-112.2667

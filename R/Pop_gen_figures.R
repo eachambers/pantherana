@@ -10,95 +10,84 @@ library(usmap)
 library(sf)
 library(sfheaders)
 library(maptools)
-
 theme_set(theme_cowplot())
-setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Separate_assemblies/ADMIXTURE/")
 
 ## The following file:
-##    (1) Plots CV error from a set of K-values from ADMIXTURE results using the `cv_error()` function
-##    (2) Imports results from ADMIXTURE (using `*.Q` and `*.fam` files) using the `import_admix_data()` function
+##    (1) Imports results from ADMIXTURE (using "*.Q", "*.fam", and "*.out" files) using the `import_admix_data()` function
+##    (2) Plots CV error from a set of K-values from ADMIXTURE results using the `cv_error()` function
 ##    (3) Builds structure plots from ADMIXTURE results using the `build_str_plot()` and `retrieve_kcols()` functions
 ##    (4) Plot pie charts on a map
+##    (5) Plot pie charts with average ancestry values
+##    (6) Identify sympatric localities
 
 ##    FILES REQUIRED:
-##            CV_error.txt
+##            "*.Q", "*.fam", and "*.out" files from admixture
+##            *_metadata files for assemblies
+##            *_order.txt for assemblies which specifies how inds are ordered in barplots
 
 source(here("R", "Pop_gen.R"))
 source(here("R", "rana_colors.R"))
 
 
-# (1) Examine CV error from ADMIXTURE -------------------------------------
-
-# Specify the dataset name
-dataset_name = "forreri" # "ATL_MXPL" "forreri" "PACMX" "CENTAM"
-
-# Build all together
-cv_error(dat = here("data", "CV_error.txt"), faceted = TRUE)
-
-# Alternatively, plot for one of the assemblies:
-cv <- read_tsv(here("data", "CV_error.txt"), col_names = TRUE) %>% 
-  filter(dataset == dataset_name)
-maxy = max(cv$CV_error)
-
-if (dataset_name == "ATL_MXPL" | dataset_name == "CENTAM") {
-  range = c(3:15)
-  hilight = c(3:7)
-  if (dataset_name == "ATL_MXPL") xint = 6
-  if (dataset_name == "CENTAM") xint = 4
-}
-if (dataset_name == "forreri") {
-  range = c(1:10)
-  hilight = c(2:6)
-  xint = 5
-}
-if (dataset_name == "PACMX") {
-  range = c(1:15)
-  hilight = c(4:10)
-  xint = 8
-}
-
-cv %>% 
-  ggplot(aes(x = K_value, y = CV_error)) +
-  scale_x_continuous(breaks = range) +
-  annotate("rect", xmin = min(hilight), xmax = max(hilight), ymin = 0, ymax = maxy, # 3-7 CENTAM & ATL_MXPL; 4-10 PACMX; 2-6 forreri
-           alpha = 0.5, fill = "#88a1c6") +
-  geom_vline(xintercept = xint, color = "red") + # 4 CENTAM; 8 PACMX; 6 ATL_MXPL; 5 forreri
-  geom_point() +
-  geom_line() +
-  xlab("K value") +
-  ylab("Cross-validation error") # export 4x3
-
-
-# (2) Import ADMIXTURE results --------------------------------------------
+# (1) Import ADMIXTURE results --------------------------------------------
 
 # The following will produce a list with each element being a K-value specified 
 # using the `K_values` argument. This function will import Q-matrices using the 
 # `*.Q` files, it will append sample IDs based on the `*.fam` files, and it will 
 # determine which K-values are the highest (`max_K` column) and what those values 
-# are (`max_K_val` column) for each sample. The `order` column is for subsequent plotting.
+# are (`max_K_val` column) for each sample.
 
-atlmx <- import_admix_data(path = ".", file = "ATL_MXPL/ATL_MXPL_relaxed_0.25miss_ldp", K_values = c(3, 4, 5, 6, 7))
-atlmx <- list(K3 = atlmx[[1]], K4 = atlmx[[2]], K5 = atlmx[[3]], K6 = atlmx[[4]], K7 = atlmx[[5]])
+atlmx <- import_admix_data(path = here("data", "admixture"), 
+                           prefix = "ATL_MXPL_relaxed_0.25miss_ldp",
+                           K_values = c(3, 4, 5, 6, 7))
 
-centam <- import_admix_data(path = ".", file = "CENTAM/new_CENTAM_relaxed_0.25miss_ldp", K_values = c(3, 4, 5, 6, 7))
-centam <- list(K3 = centam[[1]], K4 = centam[[2]], K5 = centam[[3]], K6 = centam[[4]], K7 = centam[[5]])
+centam <- import_admix_data(path = here("data", "admixture"), 
+                            prefix = "new_CENTAM_relaxed_0.25miss_ldp", 
+                            K_values = c(3, 4, 5, 6, 7))
 
-pacmx <- import_admix_data(path = ".", file = "PACMX/new_PACMX_relaxed_0.25miss_ldp", K_values = c(4, 5, 6, 7, 8, 9, 10))
-pacmx <- list(K4 = pacmx[[1]], K5 = pacmx[[2]], K6 = pacmx[[3]], K7 = pacmx[[4]],
-              K8 = pacmx[[5]], K9 = pacmx[[6]], K10 = pacmx[[7]])
+pacmx <- import_admix_data(path = here("data", "admixture"), 
+                           prefix = "new_PACMX_relaxed_0.25miss_ldp", 
+                           K_values = c(4, 5, 6, 7, 8, 9, 10))
 
-forreri <- import_admix_data(path = ".", file = "forreri/forreri_0.25miss_ldp", K_values = c(2, 3, 4, 5, 6))
-forreri <- list(K2 = forreri[[1]], K3 = forreri[[2]], K4 = forreri[[3]], K5 = forreri[[4]], K6 = forreri[[5]])
+forreri <- import_admix_data(path = here("data", "admixture"), 
+                             prefix = "forreri_0.25miss_ldp", 
+                             K_values = c(2, 3, 4, 5, 6))
+
+
+# (2) Examine CV error from ADMIXTURE -------------------------------------
+
+plot_cv_error(cv_scores = atlmx$cv_scores,
+              hilite = c(3:7),
+              bestk = 6)
+ggsave(here("plots", "atlmx_cv.pdf"), width = 4, height = 3, units = "in")
+
+plot_cv_error(cv_scores = centam$cv_scores,
+              hilite = c(3:7),
+              bestk = 4)
+ggsave(here("plots", "centam_cv.pdf"), width = 4, height = 3, units = "in")
+
+plot_cv_error(cv_scores = pacmx$cv_scores,
+              hilite = c(4:10),
+              bestk = 9)
+ggsave(here("plots", "pacmx_cv.pdf"), width = 4, height = 3, units = "in")
+
+plot_cv_error(cv_scores = forreri$cv_scores,
+              hilite = c(2:6),
+              bestk = 5)
+ggsave(here("plots", "forreri_cv.pdf"), width = 4, height = 3, units = "in")
 
 
 # (3) Structure plots of ADMIXTURE results --------------------------------
 
+dataset_name = "PACMX" # "forreri" / "ATL_MXPL" / "CENTAM" / "PACMX"
+
 # Set which element of the list produced above (K-value) you want plotted
 # for a given assembly:
-# dat = atlmx$K7
-# dat = centam$K4
-dat = pacmx$K6
-# dat = forreri$K5
+# dat = atlmx$dat$K7
+# dat = centam$dat$K4
+dat = pacmx$dat$K9
+# dat = forreri$dat$K5
+# The `order` column is for subsequent plotting.
 
 if (dataset_name == "ATL_MXPL") dat <- dat %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
 
@@ -106,29 +95,31 @@ K_value = ncol(dat)-5
 kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
 indorder <- read_tsv(paste0(here("data"), "/", dataset_name, "_order.txt"), col_names = TRUE)
 
-p <- build_str_plot(dat = dat, 
-                    K_value, 
-                    order = "manual",
-                    man_order = indorder$original_order,
-                    kcols = kcols, 
-                    xaxis_labels = TRUE,
-                    write_output = TRUE, 
-                    export_plot = TRUE,
-                    metadata_path = paste0(here("data"), "/", dataset_name, "_metadata.txt"),
-                    output_name = dataset_name) # export 12x7
+if (dataset_name == "ATL_MXPL") indorder <- indorder %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
 
+build_str_plot(dat = dat, 
+               K_value, 
+               order = "manual",
+               man_order = indorder$original_order,
+               kcols = kcols, 
+               xaxis_labels = TRUE,
+               write_output = FALSE, 
+               export_plot = FALSE,
+               metadata_path = paste0(here("data"), "/", dataset_name, "_metadata.txt"),
+               output_path = here("plots")) # export 12x7
+ggsave(paste0(here("plots"), "/", dataset_name, "_strplot.pdf"), width = 12, height = 7, units = "in")
 
 # (4) Plot pie charts on map ----------------------------------------------
 
 # Import data -------------------------------------------------------------
 
-# dat = atlmx$K6
-# dat = centam$K4
-# dat = pacmx$K6
-dat = forreri$K5
+# dat = atlmx$dat$K6
+# dat = centam$dat$K4
+dat = pacmx$dat$K9
+# dat = forreri$dat$K5
 
 # Also provide the dataset name
-dataset_name = "forreri" # "forreri" "PACMX" "CENTAM" "ATL_MXPL"
+dataset_name = "PACMX" # "forreri" "PACMX" "CENTAM" "ATL_MXPL"
 
 # Get color values
 kcols <- retrieve_kcols(K_value = ncol(dat)-5, dataset = "admixture", dataset_name)
@@ -193,7 +184,6 @@ pies_to_add <- final %>%
   # draw_pies uses cowplot::draw_plot which builds inset plots; the following adds another col with drawn pies
   mutate(drawn_pies = pmap(tibble(plot = pies, lat = new_lat, long = new_long), draw_pies, height = 0.75, width = 0.75))
 
-
 # Make base map with points and lines -------------------------------------
 
 # The base map will include the background map as well as the sampling localities 
@@ -207,16 +197,12 @@ base_map <-
   geom_point(data = final, aes(long, lat), size = 2) +
   coord_fixed()
 
-
 # Plot the pies -----------------------------------------------------------
 
 # Finally, plot the pies you've drawn on the map you've drawn
 list(base_map, pies_to_add$drawn_pies) %>% 
   reduce(.f = `+`) # export 12x8
 
-
-
-# -------------------------------------------------------------------------
 # (5) Plot pie charts with average site values ----------------------------
 
 # To plot a locality-based average of the ancestry coefficients, summarize data:
@@ -271,7 +257,6 @@ map_data %>%
   geom_text(data = obs, aes(x = long, y = lat, label = no_inds), color = "white", size = 1.5)
 
 
-# -------------------------------------------------------------------------
 # Plot forreri with range + type localities -------------------------------
 
 shp <- maptools::readShapePoly("forreri_58599/species_58599.shp")
@@ -298,7 +283,6 @@ list(base_map_sites, pies_to_add$drawn_pies) %>%
   reduce(.f = `+`) # export 12x8
 
 
-# -------------------------------------------------------------------------
 # Plot PACMX with ranges --------------------------------------------------
 
 yava <- maptools::readShapePoly("pacmx_ranges/species_19181.shp")
@@ -336,3 +320,52 @@ ggplot() +
   geom_point(data = tls, aes(Longitude, Latitude), size = 2, color = "red") +
   coord_fixed() +
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
+
+
+# (6) Identify sympatric localities ---------------------------------------
+
+library(algatr)
+
+dat_centam = centam$dat$K4
+dat_pacmx = pacmx$dat$K9
+
+# Pull in and bind with locality info for each
+dat <- dat_pacmx
+dataset_name = "PACMX"
+
+kcols <- retrieve_kcols(ncol(dat)-5, dataset = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+final <- left_join(dat, metadata, by = "Bioinformatics_ID")
+
+
+yava_forr_naya_inds <- c("V2790_PAC", "V2791_PAC", "V2792_PAC", "V2793_PAC", "V2794_PAC", "V2798_PAC", "V2800_PAC", "V2799_PAC")
+yava_forr_jali_inds <- c("T2020_Aten_PAC", "T2022_Aten_PAC", "T3437_PAC")
+omil_forr_inds <- c("V2593_pap_PAC", "V2655_pap_PAC", "V2606_pap_PAC", "V2602_pap_PAC", "T14192_papa_PAC", "V2598_pap_PAC")
+spec_omil_inds <- c("TF8695_Rspe_CMX", "TF8696_Rspe_CMX", "TF8697_Rspe_CMX", "TF8698_Rspe_CMX", "TF8699_Rspe_CMX",
+                    "TF7120_Rfor_PAC", "TF7121_Rfor_PAC", "TF7122_Rfor_PAC", "TF7123_Rfor_PAC",
+                    "TF7124_Rfor_PAC", "TF7125_Rfor_PAC", "TF7126_Rfor_PAC", "TF7127_Rfor_PAC",
+                    "TF7129_Rfor_PAC", "TF7128_Rfor_PAC")
+forr_macro_inds <- c("TF8646_Rspe_CMX", "TF8647_Rspe_CMX", "TF8648_Rspe_CMX", "TF8649_Rspe_CMX",
+                     "TF8650_Rspe_CMX", "TF8651_Rspe_CMX", "TF8652_Rspe_CMX", "TF8653_Rspe_CMX",
+                     "TF8635_Rspe_CMX", "TF8636_Rspe_CMX", "TF8637_Rspe_CMX", "TF8638_Rspe_CMX",
+                     "TF8639_Rspe_CMX", "TF8640_Rspe_CMX", "TF8641_Rspe_CMX", "TF8642_Rspe_CMX", 
+                     "TF8643_Rspe_CMX", "TF8644_Rspe_CMX", "TF8645_Rspe_CMX")
+
+forr_macro <- final %>% 
+  filter(Bioinformatics_ID %in% forr_macro_inds)
+geodists <- geo_dist(forr_macro %>% dplyr::select(lat, long) %>% rename(x = long, y = lat))
+colnames(geodists) <- forr_macro$Bioinformatics_ID
+geodists <- geodists %>% as.data.frame() %>% mutate(Bioinformatics_ID = forr_macro$Bioinformatics_ID,
+                                                    max_K = forr_macro$max_K)
+min(forr_macro$max_K_val)
+
+# Counted as sympatric:
+# omil_forr: 1.3337578, 0.8037569, 6.0612121, 9.4624518, 6.061212, 6.583978, 5.426628 at min of 0.998966 ancestry
+# forr_macro: 0, 6.887742km @ min of 0.998093
+# yava_forr_jali: 8.765118km between X6 and X7 @ 0.99 ancestry
+
+## Not counted as sympatric:
+# yava_forr_naya: 15.83702 & 16.35864 km dists between X1 and X2 @ 0.9831 ancestry
+# omil_forr: 15.8070380, 13.337578, 15.80704, 15.96336, 22.74879
+# at min of 0.998966 ancestry
+# spec_omil: 19.07065km @ 0.999906 min

@@ -54,4 +54,4 @@ Year	To_plot	Cumulative_recognized_today
 2018	29	29
 2022	31	31
 2023	33	33
-2024	24	24
+2024	23	23

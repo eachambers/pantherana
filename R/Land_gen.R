@@ -8,22 +8,23 @@ library(vegan)
 library(gdistance)
 library(topoDistance)
 library(rmapshaper)
-library(wingen) # devtools::install_github("AnushaPB/wingen")
 library(viridis)
 library(vcfR)
 library(here)
 library(cowplot)
 library(SNPRelate)
+library(tidyterra)
 theme_set(theme_cowplot())
-# setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Landgen")
 
-## This code performs land gen analyses related to testing for IBD in the R. forreri complex:
+source(here("R", "Land_gen_functions.R"))
+
+## This code performs landscape genomic analyses related to testing for IBD in the R. forreri complex:
 ##     (1) Calculate site-based genetic distances
 ##     (2) Calculate site-based geographic distances
 ##     (3) Run a Mantel test
 ##     (4) Run MMRR
 ##     (5) Run GDM
-##     (5) Run a PCA
+##     (6) Run a PCA
 
 ##    FILES REQUIRED:
 ##          LD-pruned vcf (forreri_0.25miss_ldp.recode.vcf)
@@ -45,7 +46,7 @@ samps <- read_tsv(here("data", "forreri_metadata.txt"),
   na.omit() # V2797 does not have coords
 
 # Import genetic data; 65000 variants
-vcf <- read.vcfR(file = "../Separate_assemblies/ADMIXTURE/forreri/forreri_0.25miss_ldp.recode.vcf")
+vcf <- read.vcfR(file = here("data", "forreri_0.25miss_ldp.recode.vcf"))
 
 # Subset vcf to match coords
 index <- colnames(vcf@gt) %in% samps$Bioinformatics_ID
@@ -63,23 +64,24 @@ dos <- algatr::vcf_to_dosage(vcf) # 951 loci omitted from genlight object becaus
 freqs <- dos/2 # coding is now 0, 0.5, 1 as allele frequencies
 
 # Check ordering consistency between vcf and metadata
-colnames(vcf@gt[,-1]) == samps$Bioinformatics_ID # should be all TRUE, if not run the following lines
+all(colnames(vcf@gt[,-1]) == samps$Bioinformatics_ID) # should be all TRUE, if not run the following lines
 vcford <- colnames(vcf@gt[,-1])
 # Combine lat/longs with site names, arranging so it's ordered the same as vcf - REQUIRED!!!
 sites <- left_join(samps, sites) %>% 
   arrange(Bioinformatics_ID, vcford)
+all(colnames(vcf@gt[,-1]) == sites$Bioinformatics_ID) # should be TRUE
 
 # Now, calculate mean site-based allele frequencies for each locus
 # !BE AWARE: the following changes the ordering of the sites; ensure these are consistent
 # between gendist and geodist matrices
 site_freqs <- aggregate(freqs, list(sites$site_name), FUN = mean, na.rm = TRUE) # 38 obs of 64050 vars
-write_tsv(site_freqs, "site_freqs.txt")
+write_tsv(site_freqs, here("data", "site_freqs.txt"))
 
 # Finally, calculate genetic distances and export:
 gendist <- as.matrix(dist(site_freqs, method = "euclidean"))
 unique_sites <- site_freqs[1]
 colnames(gendist) <- unique_sites$Group.1
-write_tsv(as.data.frame(gendist), file = "forreri_gendist_ldp.txt", col_names = TRUE)
+write_tsv(as.data.frame(gendist), file = here("data", "forreri_gendist_ldp.txt"), col_names = TRUE)
 
 
 # (2) Calculate site-based geographic distances ---------------------------
@@ -94,14 +96,14 @@ subsites <- sites %>%
   dplyr::select(-Bioinformatics_ID) %>% 
   filter(x != "-82.97517" & x != "-82.97519") %>% 
   distinct() %>% 
-  arrange(site_name, check)
+  arrange(site_name)
 
 unique_sites <- as.data.frame(site_freqs[1]) %>% 
   dplyr::rename(site_name = "Group.1")
 subsites <- left_join(unique_sites, subsites)
 
 # Check that ordering is correct:
-unique_sites$site_name == subsites$site_name
+all(unique_sites$site_name == subsites$site_name)
 
 # Should be 38 sites
 # Calculate geographic distances and export
@@ -147,7 +149,7 @@ dat %>%
 dat %>% 
   filter(gendist > 0) %>% 
   ggplot(aes(x = geodist_km, y = gendist)) +
-  stat_density_2d(aes(fill = ..density.., alpha = ..density..), geom = "raster", contour = FALSE, na.rm = TRUE) +
+  stat_density_2d(aes(fill = after_stat(density), alpha = ..density..), geom = "raster", contour = FALSE, na.rm = TRUE) +
   scale_fill_distiller(palette = "Spectral", direction = -1) +
   scale_alpha_continuous(range = c(0, 10), guide = guide_none()) +
   theme(legend.position = "none") +
@@ -172,96 +174,90 @@ dat %>%
   geom_smooth(method = lm, formula = y~x-1, color = "darkgrey") +
   xlab("log(Geographic distance (km))") +
   ylab("Genetic distance") +
-  ggtitle("Site-based comparisons (linear model)")
+  ggtitle("Site-based comparisons")
+
+ggsave(here("plots", "Mantel_test.pdf"), width = 8, height = 6, units = "in")
 
 ### Investigate lower cluster of points - which sites do those correspond to?
-lowclust <- dat %>% 
-  filter(gendist < 60) %>% 
-  filter(gendist > 0) %>% 
-  rename(site_name = name)
-lowclust <- left_join(lowclust, subsites)
-key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
-key$comparison <- as.character(key$comparison)
-lowclust <- left_join(lowclust, key) %>% 
-  mutate(category = "lowclust")
+# lowclust <- dat %>% 
+#   filter(gendist < 60) %>% 
+#   filter(gendist > 0) %>% 
+#   rename(site_name = name)
+# lowclust <- left_join(lowclust, subsites)
+# key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
+# key$comparison <- as.character(key$comparison)
+# lowclust <- left_join(lowclust, key) %>% 
+#   mutate(category = "lowclust")
 
 # Add in structure results
-strdat = forreri$K4 # go to pop_gen_figures for how to get this
-strdat <- left_join(sites, strdat)
-strdatsites <- strdat %>% dplyr::select(site_name, max_K) %>% distinct()
-kcols <- retrieve_kcols(4, dataset = "admixture", dataset_name)
+# strdat = forreri$K4 # go to pop_gen_figures for how to get this
+# strdat <- left_join(sites, strdat)
+# strdatsites <- strdat %>% dplyr::select(site_name, max_K) %>% distinct()
+# kcols <- retrieve_kcols(4, dataset = "admixture", dataset_name)
 
-lowclust <- left_join(lowclust, strdatsites)
-# Now add max K for comp
-lowclust <- left_join(lowclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
-
-# Add col for whether sites are in the same cluster
-lowclust <- lowclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
-
-lowclust %>% filter(geodist_km > 500)
-
-lowclust %>% 
-  ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
-  geom_point() +
-  scale_color_manual(values = kcols)
-
-
-
-### High cluster
-
-hiclust <- dat %>% 
-  filter(gendist > 60) %>% 
-  filter(gendist > 0) %>% 
-  filter(geodist_km < 400) %>% 
-  rename(site_name = name)
-hiclust <- left_join(hiclust, key) %>% 
-  mutate(category = "hiclust")
-
-hiclust <- left_join(hiclust, strdatsites)
-# Now add max K for comp
-hiclust <- left_join(hiclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
-
-# Add col for whether sites are in the same cluster
-hiclust <- hiclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
-
-hiclust %>% 
-  ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
-  geom_point() +
-  scale_color_manual(values = kcols)
-
-
-
-
+# lowclust <- left_join(lowclust, strdatsites)
+# # Now add max K for comp
+# lowclust <- left_join(lowclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
+# 
+# # Add col for whether sites are in the same cluster
+# lowclust <- lowclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
+# 
+# lowclust %>% filter(geodist_km > 500)
+# 
+# lowclust %>% 
+#   ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
+#   geom_point() +
+#   scale_color_manual(values = kcols)
+# 
+# ### High cluster
+# 
+# hiclust <- dat %>% 
+#   filter(gendist > 60) %>% 
+#   filter(gendist > 0) %>% 
+#   filter(geodist_km < 400) %>% 
+#   rename(site_name = name)
+# hiclust <- left_join(hiclust, key) %>% 
+#   mutate(category = "hiclust")
+# 
+# hiclust <- left_join(hiclust, strdatsites)
+# # Now add max K for comp
+# hiclust <- left_join(hiclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
+# 
+# # Add col for whether sites are in the same cluster
+# hiclust <- hiclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
+# 
+# hiclust %>% 
+#   ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
+#   geom_point() +
+#   scale_color_manual(values = kcols)
 
 ### Other
-
-bound <- bind_rows(hiclust, lowclust %>% dplyr::select(-x, -y, -state))
-check <- left_join(dat %>% rename(site_name = name), bound %>% dplyr::select(comparison, site_name, category))
-check %>% 
-  ggplot(aes(x = geodist_km, y = gendist, color = category)) +
-  geom_point()
+# bound <- bind_rows(hiclust, lowclust %>% dplyr::select(-x, -y, -state))
+# check <- left_join(dat %>% rename(site_name = name), bound %>% dplyr::select(comparison, site_name, category))
+# check %>% 
+#   ggplot(aes(x = geodist_km, y = gendist, color = category)) +
+#   geom_point()
 
 #### 
-new <- gendist
-rownames(new) <- colnames(gendist)
-gen_dist_hm(new)
-
-# Order sites by geographic distance to one another
-dists <- dat %>% rename(site_name = name) %>% filter(gendist > 0)
-dists <- left_join(dists, subsites)
-key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
-key$comparison <- as.character(key$comparison)
-dists <- left_join(dists, key)
-
-dists <-
-  dists %>% 
-  arrange(geodist)
-
-dists %>% 
-  ggplot(aes(x = site_name, y = comp_site_name, fill = gendist)) +
-  geom_tile() +
-  theme(axis.text.x = element_text(angle = 90))
-
+# new <- gendist
+# rownames(new) <- colnames(gendist)
+# gen_dist_hm(new)
+# 
+# # Order sites by geographic distance to one another
+# dists <- dat %>% rename(site_name = name) %>% filter(gendist > 0)
+# dists <- left_join(dists, subsites)
+# key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
+# key$comparison <- as.character(key$comparison)
+# dists <- left_join(dists, key)
+# 
+# dists <-
+#   dists %>% 
+#   arrange(geodist)
+# 
+# dists %>% 
+#   ggplot(aes(x = site_name, y = comp_site_name, fill = gendist)) +
+#   geom_tile() +
+#   theme(axis.text.x = element_text(angle = 90))
 
 ##### Run Mantel test
 # ibd <- vegan::mantel(gendist, geodist, method = "pearson")
@@ -300,20 +296,37 @@ mmrr_plot_vars(Y, X, stdz = TRUE)
 # Get summary stats
 mmrr_table(results_best, digits = 2, summary_stats = TRUE)
 
+# Build MMRR plot: Fig. 5X
+stdz = TRUE
+# Unfold X and Y
+y <- unfold(Y, scale = stdz)
+dfX <- purrr::map_dfc(X, unfold, scale = stdz) %>% purrr::map_dfc(as.numeric)
+
+# Make single variable dataframe
+df <- dfX %>%
+  dplyr::mutate(Y = y) %>%
+  tidyr::gather("var", "X", -Y)
+
+# Build plot for significant vars only
+df %>% 
+  filter(var == "PC3" | var == "geodist") %>% 
+  ggplot(aes(x = X, y = Y)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", formula = y ~ x, color = "#428b9b") +
+  facet_wrap(~var, scales = "free", nrow = 1) +
+  xlab("Variable distance") +
+  ylab("Genetic distance") +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold", hjust = 0),
+        axis.title = element_text(size = 14, face = "bold"))
+ggsave(here("plots", "MMRR_results.pdf"), width = 9, height = 3.5, units = "in")
+
 
 # (5) Run GDM -------------------------------------------------------------
 
 # Extract vars, same as MMRR
 env <- raster::extract(forr_env, subsites %>% 
                          dplyr::select(x, y))
-
-# gdm_full <- gdm_run(
-#   gendist = liz_gendist,
-#   coords = liz_coords,
-#   env = env,
-#   model = "full",
-#   scale_gendist = TRUE
-# )
 
 gdm_best <- gdm_run(gendist, 
                     coords = subsites %>% 
@@ -334,39 +347,45 @@ gdm_plot_isplines(gdm_best$model)
 gdm_table(gdm_best)
 
 # Plot the GDM map
-gdm_map(gdm_best$model, forr_env, subsites %>% 
+gdm_map(gdm_best$model, 
+        forr_env, 
+        subsites %>% 
           dplyr::select(x, y)) # export 10x8
 
 # Extract the GDM map from the GDM model object
-map <- gdm_map(gdm_best$model, forr_env, subsites %>% 
-                 dplyr::select(x, y), plot_vars = FALSE)
-
-maprgb <- map$pcaRastRGB
+map <- build_gdm_map(gdm_best$model, 
+                     forr_env, 
+                     subsites %>% 
+                       dplyr::select(x, y), 
+                     plot_vars = FALSE)
 
 # Now, use `extrap_mask()` to do masking based on SD, a buffer, or a range
 map_mask_sd <- extrap_mask(subsites %>% 
-                             dplyr::select(x, y), maprgb, method = "sd")
-# map_mask <- extrap_mask(subsites %>% 
-#                           dplyr::select(x, y), maprgb, method = "buffer", buffer_width = 1.25)
-# map_mask_range <- extrap_mask(subsites %>% 
-#                           dplyr::select(x, y), maprgb, method = "range")
+                             dplyr::select(x, y), 
+                           map$pcaRastRGB, 
+                           method = "sd",
+                           nsd = 2)
 
 # Plot the resulting masked map
-plot_extrap_mask(maprgb, map_mask_sd, RGB = TRUE, mask_col = rgb(1, 1, 1, alpha = 0.6))
-points(subsites %>% 
-         dplyr::select(x, y),
-       pch = 21, col = "white", cex = 2) # export 10x8
+ggplot() +
+  geom_spatraster_rgb(data = map$pcaRastRGB) +
+  geom_spatraster(data = map_mask_sd, aes(fill = sum), alpha = 0.6) +
+  scale_fill_gradientn(colors = "white", na.value = NA) +
+  geom_point(data = subsites, aes(x = x, y = y), size = 4, colour = "black", pch = 21) +
+  theme_map() +
+  theme(legend.position = "none")
+ggsave(here("plots", "forreri_GDM.pdf"), width = 10, height = 8, units = "in")
 
-# Export results
-terra::writeRaster(map$pcaRastRGB,
-                   file = "forreri_GDM_pcaRastRGB_best.tif",
-                   overwrite = TRUE)
-terra::writeRaster(map$rastTrans,
-                   file = "forreri_GDM_rastTrans_best.tif",
-                   overwrite = TRUE)
-terra::writeRaster(map_mask_sd,
-                   file = "forreri_GDM_SDmasked.tif",
-                   overwrite = TRUE)
+# Plot vector loadings for sig vars
+gdm_plot_vars(map$pcaSamp, 
+              map$pcaRast, 
+              map$pcaRastRGB,
+              coords = subsites %>% 
+                dplyr::select(x, y), 
+              display_axes = TRUE, 
+              x = "PC1", 
+              y = "PC2")
+ggsave(here("plots", "forreri_GDM_loadings.pdf"), width = 4, height = 4, units = "in")
 
 
 # (6) Run a PCA -----------------------------------------------------------
