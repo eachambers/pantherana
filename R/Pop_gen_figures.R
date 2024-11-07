@@ -10,22 +10,24 @@ library(usmap)
 library(sf)
 library(sfheaders)
 library(maptools)
+library(algatr)
 theme_set(theme_cowplot())
 
 ## The following file:
 ##    (1) Imports results from ADMIXTURE (using "*.Q", "*.fam", and "*.out" files) using the `import_admix_data()` function
-##    (2) Plots CV error from a set of K-values from ADMIXTURE results using the `cv_error()` function
-##    (3) Builds structure plots from ADMIXTURE results using the `build_str_plot()` and `retrieve_kcols()` functions
+##    (2) Fig. S5 (top): Plots CV error from a set of K-values from ADMIXTURE results using the `cv_error()` function
+##    (3) Figs. 2B, 2C, 3B, 3C, and S5 (bottom): Builds structure plots from ADMIXTURE results using the `build_str_plot()` and `retrieve_kcols()` functions
 ##    (4) Plot pie charts on a map
-##    (5) Plot pie charts with average ancestry values
-##    (6) Identify sympatric localities
+##    (5) Figs. 2B, 2C, 3B, and 3C: Plot pie charts with average ancestry values
+##    (6) Identify sympatric localities and calculate distances between them
+##    (7) Figs. 2C and 3C: Build inset sympatric locality maps
 
 ##    FILES REQUIRED:
 ##            "*.Q", "*.fam", and "*.out" files from admixture
 ##            *_metadata files for assemblies
 ##            *_order.txt for assemblies which specifies how inds are ordered in barplots
 
-source(here("R", "Pop_gen.R"))
+source(here("R", "Pop_gen_functions.R"))
 source(here("R", "rana_colors.R"))
 
 
@@ -324,8 +326,6 @@ ggplot() +
 
 # (6) Identify sympatric localities ---------------------------------------
 
-library(algatr)
-
 dat_centam = centam$dat$K4
 dat_pacmx = pacmx$dat$K9
 
@@ -336,7 +336,6 @@ dataset_name = "PACMX"
 kcols <- retrieve_kcols(ncol(dat)-5, dataset = "admixture", dataset_name)
 metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
-
 
 yava_forr_naya_inds <- c("V2790_PAC", "V2791_PAC", "V2792_PAC", "V2793_PAC", "V2794_PAC", "V2798_PAC", "V2800_PAC", "V2799_PAC")
 yava_forr_jali_inds <- c("T2020_Aten_PAC", "T2022_Aten_PAC", "T3437_PAC")
@@ -369,3 +368,124 @@ min(forr_macro$max_K_val)
 # omil_forr: 15.8070380, 13.337578, 15.80704, 15.96336, 22.74879
 # at min of 0.998966 ancestry
 # spec_omil: 19.07065km @ 0.999906 min
+
+
+# (7) Build inset sympatric locality structure plots ----------------------
+
+# TODO check below stuff is consistent with above
+
+dataset_name = "PACMX" # "PACMX" / "CENTAM"
+
+# if (dataset_name == "ATL_MXPL") dat <- dat %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
+K_value = ncol(dat)-5
+kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+sites <- read_tsv(paste0(here("data"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
+
+final <- left_join(dat, metadata, by = "Bioinformatics_ID")
+final <- left_join(final, sites)
+
+# Sympatric sites are those that have 2 max_Ks
+check <-
+  final %>%
+  group_by(site_name, max_K) %>%
+  count()
+
+# Extract sympatric localities only; N.B.: RioelAmate and RioPapagayo are identical
+if (dataset_name == "PACMX") symps <- final %>% dplyr::filter(site_name == "PuenteTehuantepec" | site_name == "RiolasTejas" | 
+                                                                site_name == "RioelAmate" | site_name == "RioPapagayo") %>% dplyr::arrange(site_name, max_K) %>% rownames_to_column(var = "new_order")
+if (dataset_name == "CENTAM") symps <- final %>% dplyr::filter(site_name == "CerroSPLaLoma") %>% dplyr::arrange(site_name, max_K) %>% rownames_to_column(var = "new_order")
+
+symps$new_order <- factor(symps$new_order, levels = symps$new_order)
+
+symps <-
+  symps %>% 
+  tidyr::pivot_longer(names_to = "cluster", values_to = "proportion", 
+                      -c(Bioinformatics_ID, K_val, order, new_order, max_K, max_K_val, lat, long, site_name, dataset, state))
+p <- symps %>% 
+  ggplot2::ggplot(aes(x = new_order, y = proportion, fill = cluster)) +
+  ggplot2::geom_bar(stat = "identity") + 
+  panel_border() + 
+  scale_y_continuous(expand = c(0,0)) +
+  # scale_x_discrete(expand = c(0,0)) +
+  scale_fill_manual(values = kcols) +
+  theme_cowplot() %+replace% theme(axis.line = element_line(colour = "black"),
+                                   axis.text.x = element_blank(),
+                                   axis.text.y = element_blank(),
+                                   axis.ticks = element_blank(),
+                                   axis.title.x = element_blank(),
+                                   axis.title.y = element_blank(),
+                                   legend.position = "none",
+                                   panel.border = element_rect(fill = NA, colour = "black", linetype = "solid", linewidth = 1.5),
+                                   strip.text.y = element_text(size = 30, face = "bold"),
+                                   strip.background = element_rect(colour = "white", fill = "white"),
+                                   panel.spacing = unit(-0.1, "lines"))
+
+ids <- as.list(unique(symps$Bioinformatics_ID))
+p <- p + 
+  scale_x_discrete(expand = c(0,0), labels = ids) +
+  theme(axis.text.x = element_text(angle = 90, size = 5)) # 10x4 PACMX / 2.3x3 CENTAM
+
+
+# Guerrero samples for PACMX ----------------------------------------------
+
+data("mxstate.map")
+mxstate.map$group <- as.numeric(mxstate.map$group)
+gueoax <- mxstate.map %>% dplyr::filter(id == 12 | id == 20)
+
+dataset_name = "PACMX"
+K_value = ncol(dat)-5
+kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+sites <- read_tsv(paste0(here("data"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
+
+final <- left_join(dat, metadata, by = "Bioinformatics_ID")
+gro <- left_join(final, sites) %>% 
+  dplyr::filter(state == "Guerrero" | state == "Oaxaca") %>% 
+  dplyr::arrange(site_name, max_K) %>% 
+  rownames_to_column(var = "new_order")
+gro$new_order <- factor(gro$new_order, levels = gro$new_order)
+
+# Get observation numbers (optional)
+obs <-
+  gro %>% 
+  # filter(state == "Oaxaca") %>% 
+  dplyr::select(site_name) %>% 
+  group_by(site_name) %>% 
+  summarize(no_inds = n())
+
+gro <-
+  gro %>% 
+  tidyr::pivot_longer(names_to = "cluster", values_to = "proportion", 
+                      -c(Bioinformatics_ID, K_val, order, new_order, max_K, max_K_val, lat, long, site_name, dataset, state))
+
+# Plot structure plot, ordered by site
+gro %>% 
+  filter(state == "Oaxaca") %>%
+  ggplot2::ggplot(aes(x = new_order, y = proportion, fill = cluster)) +
+  ggplot2::geom_bar(stat = "identity") + 
+  panel_border() + 
+  scale_y_continuous(expand = c(0,0)) +
+  # scale_x_discrete(expand = c(0,0)) +
+  scale_fill_manual(values = kcols) +
+  theme_cowplot() %+replace% theme(axis.line = element_line(colour = "black"),
+                                   axis.text.x = element_blank(),
+                                   axis.text.y = element_blank(),
+                                   axis.ticks = element_blank(),
+                                   axis.title.x = element_blank(),
+                                   axis.title.y = element_blank(),
+                                   legend.position = "none",
+                                   panel.border = element_rect(fill = NA, colour = "black", linetype = "solid", linewidth = 1.5),
+                                   strip.text.y = element_text(size = 30, face = "bold"),
+                                   strip.background = element_rect(colour = "white", fill = "white"),
+                                   panel.spacing = unit(-0.1, "lines")) # export 12x8
+
+# Make the map with site localities
+ggplot() +
+  geom_polygon(data = gueoax, aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.25) + # color = "#969696" if CENTAM
+  theme_map() +
+  coord_fixed() +
+  geom_point(data = gro, aes(long, lat), size = 3) +
+  geom_text(data = gro, aes(x = long, y = lat, label = site_name), color = "black", size = 3) # export 10x8
+
+

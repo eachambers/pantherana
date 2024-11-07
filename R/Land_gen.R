@@ -22,9 +22,11 @@ source(here("R", "Land_gen_functions.R"))
 ##     (1) Calculate site-based genetic distances
 ##     (2) Calculate site-based geographic distances
 ##     (3) Run a Mantel test
-##     (4) Run MMRR
-##     (5) Run GDM
-##     (6) Run a PCA
+##     (4) Build Fig. S6: Mantel test results
+##     (5) Run MMRR
+##     (6) Build Fig. 5A: MMRR results
+##     (7) Run GDM
+##     (8) Build Fig. 5B: GDM results
 
 ##    FILES REQUIRED:
 ##          LD-pruned vcf (forreri_0.25miss_ldp.recode.vcf)
@@ -138,6 +140,17 @@ melt_gen <-
 dat <- full_join(melt_gen, melt_geo) %>% 
   mutate(geodist_km = geodist*100) # joining by comparison, name; should be 741 obs (38*37/2 / 2 + 38)
 
+##### Run Mantel test
+# ibd <- vegan::mantel(gendist, geodist, method = "pearson")
+# ibd # Mantel stat r = 0.6686, sig=0.001
+# spear <- vegan::mantel(gendist, geodist, method = "spearman")
+# spear # Mantel stat r = 0.7411, sig=0.001
+IBD <- vegan::mantel(gendist, log(geodist), method = "pearson")
+IBD # Mantel stat r = 0.7699, sig=0.001
+
+
+# (4) Visualize Mantel test -----------------------------------------------
+
 # First, let's just see what this looks like plotted
 dat %>% 
   ggplot(aes(x = geodist_km, y = gendist)) +
@@ -178,97 +191,8 @@ dat %>%
 
 ggsave(here("plots", "Mantel_test.pdf"), width = 8, height = 6, units = "in")
 
-### Investigate lower cluster of points - which sites do those correspond to?
-# lowclust <- dat %>% 
-#   filter(gendist < 60) %>% 
-#   filter(gendist > 0) %>% 
-#   rename(site_name = name)
-# lowclust <- left_join(lowclust, subsites)
-# key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
-# key$comparison <- as.character(key$comparison)
-# lowclust <- left_join(lowclust, key) %>% 
-#   mutate(category = "lowclust")
 
-# Add in structure results
-# strdat = forreri$K4 # go to pop_gen_figures for how to get this
-# strdat <- left_join(sites, strdat)
-# strdatsites <- strdat %>% dplyr::select(site_name, max_K) %>% distinct()
-# kcols <- retrieve_kcols(4, dataset = "admixture", dataset_name)
-
-# lowclust <- left_join(lowclust, strdatsites)
-# # Now add max K for comp
-# lowclust <- left_join(lowclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
-# 
-# # Add col for whether sites are in the same cluster
-# lowclust <- lowclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
-# 
-# lowclust %>% filter(geodist_km > 500)
-# 
-# lowclust %>% 
-#   ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
-#   geom_point() +
-#   scale_color_manual(values = kcols)
-# 
-# ### High cluster
-# 
-# hiclust <- dat %>% 
-#   filter(gendist > 60) %>% 
-#   filter(gendist > 0) %>% 
-#   filter(geodist_km < 400) %>% 
-#   rename(site_name = name)
-# hiclust <- left_join(hiclust, key) %>% 
-#   mutate(category = "hiclust")
-# 
-# hiclust <- left_join(hiclust, strdatsites)
-# # Now add max K for comp
-# hiclust <- left_join(hiclust, strdatsites %>% rename(comp_site_name = site_name, max_K_comp = max_K))
-# 
-# # Add col for whether sites are in the same cluster
-# hiclust <- hiclust %>% mutate(same_clust = case_when(max_K == max_K_comp ~ "yes"))
-# 
-# hiclust %>% 
-#   ggplot(aes(x = geodist_km, y = gendist, color = max_K)) +
-#   geom_point() +
-#   scale_color_manual(values = kcols)
-
-### Other
-# bound <- bind_rows(hiclust, lowclust %>% dplyr::select(-x, -y, -state))
-# check <- left_join(dat %>% rename(site_name = name), bound %>% dplyr::select(comparison, site_name, category))
-# check %>% 
-#   ggplot(aes(x = geodist_km, y = gendist, color = category)) +
-#   geom_point()
-
-#### 
-# new <- gendist
-# rownames(new) <- colnames(gendist)
-# gen_dist_hm(new)
-# 
-# # Order sites by geographic distance to one another
-# dists <- dat %>% rename(site_name = name) %>% filter(gendist > 0)
-# dists <- left_join(dists, subsites)
-# key <- as.data.frame(colnames(gendist)) %>% mutate(comparison = 1:38) %>% rename(comp_site_name = `colnames(gendist)`)
-# key$comparison <- as.character(key$comparison)
-# dists <- left_join(dists, key)
-# 
-# dists <-
-#   dists %>% 
-#   arrange(geodist)
-# 
-# dists %>% 
-#   ggplot(aes(x = site_name, y = comp_site_name, fill = gendist)) +
-#   geom_tile() +
-#   theme(axis.text.x = element_text(angle = 90))
-
-##### Run Mantel test
-# ibd <- vegan::mantel(gendist, geodist, method = "pearson")
-# ibd # Mantel stat r = 0.6686, sig=0.001
-# spear <- vegan::mantel(gendist, geodist, method = "spearman")
-# spear # Mantel stat r = 0.7411, sig=0.001
-IBD <- vegan::mantel(gendist, log(geodist), method = "pearson")
-IBD # Mantel stat r = 0.7699, sig=0.001
-
-
-# (4) Run MMRR ------------------------------------------------------------
+# (5) Run MMRR ------------------------------------------------------------
 
 # Load env data
 forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
@@ -296,7 +220,10 @@ mmrr_plot_vars(Y, X, stdz = TRUE)
 # Get summary stats
 mmrr_table(results_best, digits = 2, summary_stats = TRUE)
 
-# Build MMRR plot: Fig. 5X
+
+# (6) Visualize MMRR results ----------------------------------------------
+
+# Build MMRR plot: Fig. 5A
 stdz = TRUE
 # Unfold X and Y
 y <- unfold(Y, scale = stdz)
@@ -322,7 +249,7 @@ df %>%
 ggsave(here("plots", "MMRR_results.pdf"), width = 9, height = 3.5, units = "in")
 
 
-# (5) Run GDM -------------------------------------------------------------
+# (7) Run GDM -------------------------------------------------------------
 
 # Extract vars, same as MMRR
 env <- raster::extract(forr_env, subsites %>% 
@@ -345,6 +272,9 @@ gdm_best$varimp
 gdm_plot_diss(gdm_best$model)
 gdm_plot_isplines(gdm_best$model)
 gdm_table(gdm_best)
+
+
+# (8) Visualize GDM results -----------------------------------------------
 
 # Plot the GDM map
 gdm_map(gdm_best$model, 
@@ -387,27 +317,3 @@ gdm_plot_vars(map$pcaSamp,
               y = "PC2")
 ggsave(here("plots", "forreri_GDM_loadings.pdf"), width = 4, height = 4, units = "in")
 
-
-# (6) Run a PCA -----------------------------------------------------------
-
-snpgdsVCF2GDS("forreri.vcf", "forreri.gds", method = "biallelic.only")
-geno <- openfn.gds("forreri.gds")
-forr_pca <- snpgdsPCA(geno, autosome.only = FALSE)
-results <- as.data.frame(forr_pca$eigenvect)
-
-dat <- bind_cols(results, samps)
-
-# Make levels based on N-S
-n_s_states <- c("Sinaloa", "Nayarit", "Jalisco", "Colima",
-                "Guerrero", "Oaxaca", "Chiapas", "Jutiapa",
-                "Jinotega", "Nicaragua", "Guanacaste", "Puntarenas")
-dat$state <- factor(dat$state, levels = n_s_states)
-
-dat %>%
-  ggplot(aes(x = V1, y = V2, color = state, label = Bioinformatics_ID)) +
-  geom_point(size = 4) +
-  geom_text(hjust = 0, vjust = 0, size = 3, na.rm = TRUE)
-
-dat %>% 
-  filter(V2 > 0.175) %>% 
-  dplyr::select(Bioinformatics_ID)

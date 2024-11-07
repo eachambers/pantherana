@@ -10,22 +10,27 @@ library(rgdal)
 library(viridis)
 theme_set(theme_cowplot())
 
+source(here("R", "Mapping_functions.R"))
+source(here("R", "hhsd_functions.R"))
+source(here("R", "rana_colors.R"))
+
 ## The following file:
 ##    (1) Imports coordinates
 ##    (2) Imports map data
-##    (3) Builds plots
+##    (3) Range maps: Figs. 1C, 2A, and 3A
+##    (4) Fig. S3: Builds map of elevation with MX biogeographic regions and state boundaries
 ##    (4) Map environmental PCs
 ##    (5) forreri type localities
-##    (6) Range maps
+##    (7) Plots the Plateau of Guatemala (for R. macroglossa type locality)
 
 ##    FILES REQUIRED:
 ##            *_metadata.txt # metadata for each of the four separate assemblies
-##            PC_layers/ # directory with PC layers (see `Env_data.R` script to generate)
+##            PC_layers/ # directory with PC layers (use `Env_data.R` script to generate)
 
 
 # Import coordinates ------------------------------------------------------
 
-files <- list.files(here("data"), pattern = "metadata.txt", full.names = TRUE)
+files <- list.files(here("data"), pattern = "_metadata.txt", full.names = TRUE)
 fs <- 1:length(files)
 coords <- 
   fs %>% 
@@ -88,20 +93,94 @@ mxstate.map$group <- as.numeric(mxstate.map$group)
 map_data <-
   bind_rows(centamer, mxstate.map)
 
-# Load biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
-provinces <- readOGR(dsn = here("data", "biogeo_provinces_mx", "rbiog4mgw.shp"), stringsAsFactors = F)
+# Range maps --------------------------------------------------------------
 
+# Read in all range map shapefiles
+ranges <- import_range_maps(path = here("data", "range_maps"))
+# Read in type localities
+tls <- read_tsv(here("data", "type_localities.txt"))
+# Get colors
+spp_colors <- mapping_colors(here("data", "type_localities_rec.txt"))
 
-# Build plots -------------------------------------------------------------
-
-ggplot() +
-  geom_spatraster(data = dem) +
-  scale_fill_gradientn(colors = palette, na.value = NA) +
+# Make range map
+p_ranges <-
+  ggplot() +
+  geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") + # color = "#969696" if CENTAM
+  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") +
   theme_map() +
-  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  geom_polygon(data = centamer, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25) +
-  # geom_point(data = coords, aes(x = x, y = y), color = "white") +
-  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25, linetype = "dotted")
+  # forreri
+  geom_polygon(data = ranges$forr, aes(long, lat, group = group), fill = spp_colors$forr, alpha = 0.75) +
+  # foothills species
+  geom_polygon(data = ranges$yava, aes(long, lat, group = group), fill = spp_colors$yava, alpha = 0.75) +
+  geom_polygon(data = ranges$magn, aes(long, lat, group = group), fill = spp_colors$magn, alpha = 0.75) +
+  geom_polygon(data = ranges$omil, aes(long, lat, group = group), fill = spp_colors$omil, alpha = 0.75) +
+  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), color = "#428b9b") +
+  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), color = "#c0a06f") +
+  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), shape = 1, color = "black") +
+  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), shape = 1, color = "black") +
+  # CENTAM species
+  geom_polygon(data = ranges$spnov, aes(long, lat, group = group), fill = spp_colors$spnov, alpha = 0.75) +
+  geom_polygon(data = ranges$lenca, aes(long, lat, group = group), fill = spp_colors$lenca, alpha = 0.75) +
+  # ATL_MXPL species
+  geom_polygon(data = ranges$macro1, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
+  geom_polygon(data = ranges$macro2, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
+  coord_map(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
+  geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # color = "#969696" if CENTAM
+  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
+
+# Add type localities of recognized and unrecognized species on to map
+p_ranges +
+  geom_point(data = tls %>% filter(Status == "rec"), aes(Longitude, Latitude, color = Species), size = 3) +
+  scale_color_manual(values = c("Arcelia" = "#d2a3a6", "Atenquique_long" = "#428b9b", "Atenquique_short" = "#c0a06f", 
+                                "berlandieri" = "#984625", "forreri" = "#73806d",
+                                "lenca" = "#924c62", "macroglossa" = "#e0895a", "magnaocularis" = "#f7cd5e",
+                                "omiltemana" = "#ba94a6", "spectabilis" = "#80a4bc", "yavapaiensis" = "#054051")) +
+  geom_point(data = tls %>% filter(Status == "rec"), aes(Longitude, Latitude), shape = 1, color = "black", size = 3) +
+  geom_point(data = tls %>% filter(Status == "notrec"), aes(Longitude, Latitude), color = "white", size = 2) +
+  geom_point(data = tls %>% filter(Status == "notrec"), aes(Longitude, Latitude), shape = 1, color = "black", size = 2) +
+  theme(legend.position = "none") # export 10x8
+
+
+# Fig. 4: HHSD sampling ---------------------------------------------------
+
+dataset_name = "forreri" # forreri / foothills / mxpl
+
+if (dataset_name == "foothills") metadata <- read_tsv(paste0(here("data"), "/PACMX_metadata.txt"), col_names = TRUE)
+if (dataset_name == "forreri") metadata <- read_tsv(paste0(here("data"), "/forreri_metadata.txt"), col_names = TRUE)
+if (dataset_name == "mxpl") metadata <- read_tsv(paste0(here("data"), "/ATL_MXPL_metadata.txt"), col_names = TRUE)
+if (dataset_name == "forreri") colvals = c("hilli" = "#428b9b", "miad" = "#73806d", "arce" = "#d2a3a6", "forr" = "gray74", "flor" = "gray30")
+if (dataset_name == "foothills") colvals = c("omig" = "#a8a2ca", "magn" = "#f7cd5e", "omio" = "#ba94a6", 
+                                             "yava" = "#054051", "ates" = "#c0a06f", "atel" = "#428b9b")
+if (dataset_name == "mxpl") colvals = c("spec" = "#80a4bc", "chic" = "#6f82b7", "berl" = "#984625", "neov" = "#e97490")
+
+dat <- retrieve_hhsd_coding(dataset_name, save_imap = TRUE)
+final <- left_join(dat, metadata, by = "Bioinformatics_ID") %>% na.omit()
+states <- map_data("state")
+
+p_base <-
+  ggplot() +
+  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.5) + 
+  geom_polygon(data = states, aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.5) +
+  geom_point(data = final, aes(long, lat, color = pop), size = 4) + # if mxpl, size = 3
+  geom_point(data = final, aes(long, lat), shape = 1, color = "black", size = 4) + # if mxpl, size = 3
+  scale_color_manual(values = colvals) +
+  theme_map() +
+  theme(legend.position = "none") # export 6x4
+
+# Fix the limits depending on the dataset
+ymin <- min(final$lat)-2
+ymax <- max(final$lat)+2
+xmin <- min(final$long)-2
+xmax <- max(final$long)+2
+
+p_base +
+  coord_fixed(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
+
+
+# Fig. S3: DEM with biogeo provinces --------------------------------------
+
+# Import biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
+provinces <- readOGR(dsn = here("data", "biogeo_provinces_mx", "rbiog4mgw.shp"), stringsAsFactors = F)
 
 # Plot Mexican biogeographic provinces (export 12x8)
 ggplot() +
@@ -110,40 +189,13 @@ ggplot() +
   theme_map() +
   geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "grey40", fill = NA, linewidth = 0.25, linetype = "dashed") +
   # geom_point(data = coords, aes(x = x, y = y), color = "pink") +
-  # geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
+  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
   geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
-
-
-# Map environmental PCs ---------------------------------------------------
-
-# Load env data
-forr_env <- raster::stack(list.files("PC_layers/", full.names = TRUE))
-forr_env <- raster::readAll(forr_env)
-
-# Simple plotting:
-raster::plot(forr_env[[3]])
-
-# ggplot plotting:
-pc3 <- terra::as.data.frame(forr_env[[3]], xy = TRUE)
-
-pc3 %>% 
-  # drop_na(forreri_PC3) %>% 
-  ggplot() +
-  geom_raster(data = pc3, aes(x = x, y = y, fill = forreri_PC3)) +
-  theme_map() +
-  # scale_fill_viridis(option = "magma", na.value = "white") +
-  scale_fill_viridis_c(na.value = "white") +
-  coord_fixed()
-
-library(stars)
-tif = read_stars("MexicanBiogeographicProvinces.tif", package = "stars")
-sf = st_as_sf(tif)
-
 
 # forreri type localities -------------------------------------------------
 
 # Read in type localities
-types <- read_tsv(here("data", "forreri_type_localities.txt"), col_names = TRUE)
+types <- read_tsv(here("data", "forreri_typelocalities.txt"), col_names = TRUE)
 
 ## Build background map
 world <- map_data("world")
@@ -171,48 +223,8 @@ base_map +
   geom_point(data = types, aes(x = longitude, y = latitude), size = 2)
 
 
-# (6) Range maps ----------------------------------------------------------
-
-source(here("R", "mapping_functions.R"))
-
-# Read in all range map shapefiles
-ranges <- import_range_maps(path = here("data", "range_maps"))
-
-# Read in type localities
-tls <- read_tsv(here("data", "type_localities.txt"), col_names = TRUE)
-
-ggplot() +
-  geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") + # color = "#969696" if CENTAM
-  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") +
-  theme_map() +
-  geom_polygon(data = berl, aes(x = long, y = lat, group = group), fill = "#984625", alpha = 0.75) +
-  geom_polygon(data = neo, aes(x = long, y = lat, group = group), fill = "magenta", alpha = 0.75) +
-  geom_polygon(data = macro1, aes(x = long, y = lat, group = group), fill = "#e0895a", alpha = 0.75) +
-  geom_polygon(data = brown, aes(x = long, y = lat, group = group), fill = "orange", alpha = 0.75)
-  geom_polygon(data = ranges$yava, aes(long, lat, group = group), fill = "#054051", alpha = 0.75) +
-  geom_polygon(data = ranges$magn, aes(long, lat, group = group), fill = "#f7cd5e", alpha = 0.75) +
-  geom_polygon(data = ranges$forr, aes(long, lat, group = group), fill = "#73806d", alpha = 0.75) +
-  geom_polygon(data = ranges$omil, aes(long, lat, group = group), fill = "#ba94a6", alpha = 0.75) +
-  geom_polygon(data = ranges$spec, aes(long, lat, group = group), fill = "#80a4bc", alpha = 0.75) +
-  geom_polygon(data = ranges$spnov, aes(long, lat, group = group), fill = "#82ccc8", alpha = 0.75) +
-  geom_polygon(data = ranges$lenca, aes(long, lat, group = group), fill = "#924c62", alpha = 0.75) +
-  # geom_polygon(data = ranges$berneo, aes(long, lat, group = group), fill = "#984625", alpha = 0.75) +  
-  # geom_polygon(data = ranges$macro, aes(long, lat, group = group), fill = "#e0895a", alpha = 0.75) +  
-  coord_map(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
-  geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # color = "#969696" if CENTAM
-  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  geom_point(data = tls %>% filter(Status == "rec"), aes(Longitude, Latitude, color = Species), size = 2) +
-  scale_color_manual(values = c("Arcelia" = "#d2a3a6", "Atenquique_long" = "#428b9b", "Atenquique_short" = "#c0a06f", 
-                                "berlandieri" = "#984625", "chichicuahutla" = "#6f82b7", "forreri" = "#73806d",
-                                "lenca" = "#924c62", "macroglossa" = "#e0895a", "magnaocularis" = "#f7cd5e",
-                                "omiltemana" = "#ba94a6", "spectabilis" = "#80a4bc", "yavapaiensis" = "#054051")) +
-  geom_point(data = tls %>% filter(Status == "notrec"), aes(Longitude, Latitude), color = "black", size = 1.5) +
-  theme(legend.position = "none") # export 10x8
-
-
 # Plateau of Guatemala ----------------------------------------------------
 
-world <- map_data("world")
 guat <- filter(world, region == "Guatemala")
 xguat = c(min(guat$long)-1, max(guat$long)+1, min(guat$long)-1, max(guat$long)+1)
 yguat = c(max(guat$lat)+1, max(guat$lat)+1, min(guat$lat)-1, min(guat$lat-1))

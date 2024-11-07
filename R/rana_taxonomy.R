@@ -4,7 +4,8 @@ library(ggplot2)
 library(cowplot)
 theme_set(theme_cowplot())
 
-## The following file builds Fig. S2: the taxonomic history of the leopard frog species complex.
+## The following file builds Fig. S2: the taxonomic history of the leopard frog 
+## species complex.
 
 ##    FILES REQUIRED:
 ##            rana_taxonomy.txt # Taxonomic history of the group

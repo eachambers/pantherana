@@ -190,9 +190,6 @@ structure_plot_helper <- function(dat, kcols){
 }
 
 
-# -------------------------------------------------------------------------
-# PIE CHARTS --------------------------------------------------------------
-
 #' Make pie charts with data
 #'
 #' @param dat ADMIXTURE results for a single sample
@@ -276,92 +273,4 @@ repel_coords <- function(dat, padding_param = 0.5, force_param = 4, ignore_repel
     }
   }
   return(dat_w_repel)
-}
-
-# -------------------------------------------------------------------------
-# TESS3 FUNCTIONS ---------------------------------------------------------
-
-# TODO potentially remove below?
-
-tess_ggbarplot <- function(qmat, ggplot_fill = algatr_col_default("ggplot"), sort_by_Q = TRUE, legend = TRUE) {
-  # Get K
-  K <- ncol(qmat)
-  dat <- as.data.frame(qmat) %>%
-    tibble::rownames_to_column(var = "order")
-  
-  if (sort_by_Q) {
-    gr <- apply(qmat, MARGIN = 1, which.max)
-    gm <- max(gr)
-    gr.o <- order(sapply(1:gm, FUN = function(g) mean(qmat[, g])))
-    gr <- sapply(gr, FUN = function(i) gr.o[i])
-    or <- order(gr)
-
-    dat <- dat %>%
-      dplyr::arrange(factor(order, levels = or))
-    dat$order <- factor(dat$order, levels = dat$order)
-  }
-  
-  # Make into tidy df
-  gg_df <-
-    dat %>%
-    tidyr::pivot_longer(names_to = "K_value", values_to = "Q_value",
-                        -c(order))
-  
-  # Build plot using helper function
-  plt <- ggbarplot_helper(gg_df) + ggplot_fill
-  
-  # Remove legend
-  if (!legend) plt <- plt + ggplot2::theme(legend.position = "none")
-  
-  return(plt)
-}
-
-#' Helper function for TESS barplots using ggplot
-#'
-#' @param dat Q matrix
-#'
-#' @return barplot with Q-values and individuals, colorized by K-value
-#' @export
-ggbarplot_helper <- function(dat) {
-  dat %>%
-    ggplot2::ggplot(aes(x = order, y = Q_value, fill = K_value)) +
-    ggplot2::geom_bar(stat = "identity") +
-    ggplot2::scale_y_continuous(expand = c(0,0)) +
-    ggplot2::scale_x_discrete(expand = c(0,0)) +
-    ggplot2::theme(axis.line = ggplot2::element_line(colour = "black"),
-                   axis.text.x = ggplot2::element_blank(),
-                   axis.ticks.x = ggplot2::element_blank(),
-                   axis.title.x = ggplot2::element_blank(),
-                   panel.border = ggplot2::element_rect(fill = NA, colour = "black", linetype = "solid", linewidth = 1.5),
-                   strip.text.y = ggplot2::element_text(size = 30, face = "bold"),
-                   strip.background = ggplot2::element_rect(colour = "white", fill = "white"),
-                   panel.spacing = unit(-0.1, "lines"))
-}
-
-#' Save Q-matrices resulting from running TESS
-#'
-#' @param tess3_obj tess3 object returned from running TESS
-#' @param dos dosage matrix used as input into TESS
-#' @param save_path path to save file to; saves in pwd if not specified
-#' @param dataset_name name of dataset, for file naming
-#'
-#' @return saves tsv file with results
-#' @export
-save_tess_results <- function(tess3_obj, dos, save_path = ".", dataset_name) {
-  # Get best K
-  bestK <- tess3_obj[["K"]]
-  
-  # Get Q values for best K
-  qmat <- tess3r::qmatrix(tess3_obj, K = bestK)
-  
-  # Retrieve sample IDs from dosage matrix
-  dos_names <- as.data.frame(rownames(dos)) %>% 
-    rename(Bioinformatics_ID = `rownames(dos)`)
-  
-  dat <- cbind(dos_names, qmat) %>% 
-    dplyr::mutate(K_value = bestK)
-  
-  write_tsv(dat, paste0(save_path, "/", dataset_name, "_TESS3_results_K", bestK, ".txt"))
-  
-  return(dat)
 }

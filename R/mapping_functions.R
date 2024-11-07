@@ -1,36 +1,53 @@
 import_range_maps <- function(path) {
-  yava <- maptools::readShapePoly(paste0(path, "/yavapaiensis/data_0.shp"))
-  yava <- fortify(yava)
-    
-  magn <- maptools::readShapePoly(paste0(path, "/magnaocularis_58656/species_58656.shp"))
-  magn <- fortify(magn)
+  # foothills species
+  yava <- readOGR(paste0(path, "/yavapaiensis/data_0.shp"))
+  magn <- readOGR(paste0(path, "/magnaocularis/data_0.shp"))
+  omil <- readOGR(paste0(path, "/new_omiltemana_wpapa/species_58687.shp"))
   
-  forr <- maptools::readShapePoly(paste0(path, "/forreri/data_0.shp"))
-  forr <- fortify(forr)
+  tls <- read_tsv(here("data", "type_localities_rec.txt"))
+  aten_short <- tls %>% 
+    filter(Species == "Aten_short_other" | Species == "Atenquique_short")
+  aten_long <- tls %>% 
+    filter(Species == "Atenquique_long")
   
-  spnov <- maptools::readShapePoly(paste0(path, "/species b (sp.4).shp"))
-  spnov <- fortify(spnov)
+  # CENTAM species
+  lenca <- readOGR(paste0(path, "/lenca_handmade/species_58653.shp"))
+  spnov <- readOGR(paste0(path, "/spnov/species b (sp.4).shp"))
   
-  omil <- maptools::readShapePoly(paste0(path, "/new_omiltemana_wpapa/species_58687.shp"))
-  omil <- fortify(omil)
+  # forreri
+  forr <- readOGR(paste0(path, "/forreri/data_0.shp"))
   
-  spec <- maptools::readShapePoly(paste0(path, "/spectabilis_58722/species_58722.shp"))
-  spec <- fortify(spec)
+  # ATL_MXPL
+  berl <- readOGR(paste0(path, "/berneo/species_58561.shp"))
+  spec <- readOGR(paste0(path, "/spectabilis/species_58722.shp"))
+  macro1 <- readOGR(paste0(path, "/new_macroglossa/data_0.shp"))
+  macro2 <- readOGR(paste0(path, "/taylori_58732/species_58732.shp"))
   
-  lenca <- maptools::readShapePoly(paste0(path, "/lenca_handmade/species_58653.shp"))
-  lenca <- fortify(lenca)
+  return(list(yava = yava, magn = magn, omil = omil, lenca = lenca, spnov = spnov, 
+              forr = forr, berl = berl, spec = spec, macro1 = macro1, macro2 = macro2,
+              aten_long = aten_long, aten_short = aten_short))
+}
 
-  macro1 <- maptools::readShapePoly(paste0(path, "/redlist_species_data_63e03aaf-8763-4637-a167-0cd1cb2745e6/data_0.shp"))
-  macro1 <- fortify(macro1)
+mapping_colors <- function(path_to_tls) {
+  tls <- read_tsv(path_to_tls)
   
-  brown <- maptools::readShapePoly(paste0(path, "/redlist_species_data_bbde5bab-e44a-45d1-afd3-6dc21316d07b/data_0.shp"))
-  brown <- fortify(brown)
+  # foothills
+  yava <- tls %>% filter(Species == "yavapaiensis") %>% pull(Color)
+  magn <- tls %>% filter(Species == "magnaocularis") %>% pull(Color)
+  omil <- tls %>% filter(Species == "omiltemana") %>% pull(Color)
+  aten_long <- tls %>% filter(Species == "Atenquique_long") %>% pull(Color)
+  aten_short <- tls %>% filter(Species == "Atenquique_short") %>% pull(Color)
+  # CENTAM
+  lenca <- tls %>% filter(Species == "lenca") %>% pull(Color)
+  spnov <- "#82ccc8"
+  # forreri
+  forr <- tls %>% filter(Species == "forreri") %>% pull(Color)
+  # ATL_MXPL
+  berl <- tls %>% filter(Species == "berlandieri") %>% pull(Color)
+  spec <- tls %>% filter(Species == "spectabilis") %>% pull(Color)
+  macro <- tls %>% filter(Species == "macroglossa") %>% pull(Color)
   
-  berl <- maptools::readShapePoly(paste0(path, "/redlist_species_data_f8832c88-565b-431b-a5d2-1be9e0f33f54/data_0.shp"))
-  berl <- fortify(berl)
-  
-  neo <- maptools::readShapePoly(paste0(path, "/neovolcanica/data_0.shp"))
-  neo <- fortify(neo)
-  
-  return(list(yava = yava, magn = magn, forr = forr, spnov = spnov, omil = omil, spec = spec, lenca = lenca))
+  return(list(yava = yava, magn = magn, omil = omil, lenca = lenca, spnov = spnov, 
+              forr = forr, berl = berl, spec = spec, macro = macro,
+              aten_long = aten_long, aten_short = aten_short))
 }

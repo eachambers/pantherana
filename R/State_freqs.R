@@ -3,7 +3,7 @@ library(here)
 
 ## This code does the following:
 ##     1. Calculates state frequencies for pooled assemblies to run RAxML-ng with an ascertainment bias correction
-##        on each of the two pooled assemblies (min_500, max_80p)
+##        on the pooled assembly
 
 ##    FILES REQUIRED:
 ##          pooled_missing.txt # info on missing data and assignment of samples into various assemblies (from PAUP*; n=632)

@@ -16,8 +16,8 @@ theme_set(theme_cowplot())
 ##     (3) Check for collinearity among enviro layers
 ##     (4) Run raster PCA
 ##     (5) Export data
-##     (6) Map out raster PCA results
-##     (7) See how bioclimatic variables load onto raster PCs
+##     (6) Fig. S7A: Map out raster PCA results
+##     (7) Fig. S7B: See how bioclimatic variables load onto raster PCs
 
 ##    FILES REQUIRED:
 ##          Site data for forreri samples (forreri_sites.txt)
@@ -134,7 +134,7 @@ raster::writeRaster(forr_env, here("data", "forreri_PCenv.tif"), overwrite = TRU
 # (6) Plot raster PCA results ---------------------------------------------
 
 # If you haven't run the above, can just start with:
-# forr_env <- raster::stack(list.files("./PC_layers/", full.names = TRUE))
+forr_env <- raster::stack(list.files(here("data", "PC_layers"), full.names = TRUE))
 
 # Take a look at PCs 1 and 2 plotted
 # pcs <- as.data.frame(forr_env, xy = TRUE)
@@ -147,7 +147,7 @@ raster::writeRaster(forr_env, here("data", "forreri_PCenv.tif"), overwrite = TRU
 
 # Read in borders from shapefile
 border <- sf::st_read(here("data"), layer = "mx_centam_merged")
-st_crs(border) = 4326 # WGS 84
+sf::st_crs(border) = 4326 # WGS 84
 
 pal <- MVZ_palette("LifeHistories",  type = "discrete")
 palette = grDevices::colorRampPalette(pal)(100)
@@ -155,6 +155,7 @@ palette = grDevices::colorRampPalette(pal)(100)
 forr_env_r <- terra::rast(forr_env)
 xlim <- c(xmin(forr_env_r), xmax(forr_env_r))
 ylim <- c(ymin(forr_env_r), ymax(forr_env_r))
+
 ggplot() +
   geom_spatraster(data = forr_env_r[[3]], aes(fill = PC3)) +
   scale_fill_gradientn(colors = palette, na.value = NA, name = "PC3") +
@@ -162,7 +163,6 @@ ggplot() +
   geom_sf(data = border, fill = NA, color = "white", size = 0.5) +
   coord_sf(xlim = xlim, ylim = ylim) +
   geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "gray48", fill = NA, linewidth = 0.25) +
   geom_point(data = samps, aes(x = x, y = y))
 ggsave(here("plots", "forr_PC3_map.pdf"), width = 10, height = 8, units = "in")
 

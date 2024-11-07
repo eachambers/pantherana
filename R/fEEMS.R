@@ -12,7 +12,7 @@ library(cowplot)
 ##    (1) Generates input files for FEEMS
 ##    (2) Creates a discrete global grid for FEEMS
 ##    (3) Imports FEEMS output files
-##    (4) Makes FEEMS map (Fig. X)
+##    (4) Makes FEEMS map (Fig. 5C)
 
 ##    FILES REQUIRED:
 ##            "forreri_metadata.txt" and "forreri_0.25miss_ldp_n103.recode.vcf"
