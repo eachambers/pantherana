@@ -29,7 +29,7 @@ Analyses were performed on different bioinformatics assemblies of our data. They
 ## Phylogenetic tree inference
 * [RAXML-ng analysis](XXX)
     1. XXX
-    2. Uses state frequency calculations from [`State_freqs.R`](XXX) for running RAXML-ng with an ascertainment bias correction
+    2. Uses state frequency calculations from [`State_freqs.R`](https://github.com/eachambers/pantherana/blob/main/R/State_freqs.R) for running RAXML-ng with an ascertainment bias correction
 
 ## Population structure analyses
 * [Population structure processing script](XXX)
