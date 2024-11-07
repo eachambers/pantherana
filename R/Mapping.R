@@ -7,7 +7,10 @@ library(elevatr)
 library(mxmaps)
 library(tidyterra)
 library(rgdal)
+<<<<<<< Updated upstream
 library(viridis)
+=======
+>>>>>>> Stashed changes
 theme_set(theme_cowplot())
 
 source(here("R", "Mapping_functions.R"))
@@ -25,6 +28,7 @@ source(here("R", "rana_colors.R"))
 
 ##    FILES REQUIRED:
 ##            *_metadata.txt # metadata for each of the four separate assemblies
+<<<<<<< Updated upstream
 ##            PC_layers/ # directory with PC layers (use `Env_data.R` script to generate)
 
 
@@ -64,6 +68,49 @@ mxbounds <- data.frame(x = mxx, y = mxy)
 # Import DEM using elevatr
 dem <- elevatr::get_elev_raster(bounds, prj = "WGS84", z = 6)
 demmx <- elevatr::get_elev_raster(mxbounds, prj = "WGS84", z = 6)
+=======
+##            PC_layers/ # directory with PC layers (see `Env_data.R` script to generate)
+
+
+# Import coordinates ------------------------------------------------------
+
+files <- list.files(here("data"), pattern = "metadata.txt", full.names = TRUE)
+fs <- 1:length(files)
+coords <- 
+  fs %>% 
+  lapply(function(x) {
+    dat <- readr::read_tsv(files[x], col_names = TRUE) %>% 
+      dplyr::rename(x = long, y = lat) %>% 
+      drop_na() %>% 
+      as.data.frame()
+    return(dat)
+  }) %>% 
+  dplyr::bind_rows() %>% 
+  dplyr::select(-dataset) %>% 
+  distinct() # should be 507 samples
+
+# Check that there are no duplicates
+coords %>% 
+  filter(duplicated(.[["Bioinformatics_ID"]]))
+
+
+# Import map data ---------------------------------------------------------
+
+# 33.486042, -119.324656
+x = c(-119.32, max(coords$x), -119.32, max(coords$x))
+y = c(33.486, 33.486, min(coords$y), min(coords$y))
+bounds <- data.frame(x, y)
+
+mxx = c(-119.32, max(coords$x), -119.32, -86.261)
+mxy = c(33.486, 33.486, 14.1596, 14.1596)
+mxbounds <- data.frame(x = mxx, y = mxy)
+
+# Import DEM using elevatr
+dem <- elevatr::get_elev_raster(bounds, prj = "WGS84", z = 6)
+demmx <- elevatr::get_elev_raster(mxbounds, prj = "WGS84", z = 6)
+
+
+>>>>>>> Stashed changes
 
 # Define min value (otherwise it'll go negative) 
 min <- 0
@@ -81,6 +128,7 @@ demmx <- terra::rast(demmx2)
 pal = c("#844836", "#b07156", "#b99364", "#dac3a9", "#8fa997") # , "#6baeb0", "#376988"
 palette = grDevices::colorRampPalette(pal)(100)
 palette <- rev(palette)
+<<<<<<< Updated upstream
 
 ## Build background map
 world <- map_data("world")
@@ -94,6 +142,44 @@ map_data <-
   bind_rows(centamer, mxstate.map)
 
 # Range maps --------------------------------------------------------------
+=======
+
+## Build background map
+world <- map_data("world")
+centamer <- filter(world, region == "Mexico" | region == "Belize" | region == "Guatemala" | region == "Honduras" | region == "Nicaragua" | region == "Costa Rica" | region == "Panama")
+
+# Load Mexico state map using mxmaps package
+data("mxstate.map")
+mxstate.map$group <- as.numeric(mxstate.map$group)
+
+map_data <-
+  bind_rows(centamer, mxstate.map)
+
+# Load biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
+provinces <- readOGR(dsn = "~/Box Sync/Rana project/Range maps/biogeo_provinces_mx/rbiog4mgw.shp", stringsAsFactors = F)
+
+
+# Build plots -------------------------------------------------------------
+
+ggplot() +
+  geom_spatraster(data = dem) +
+  scale_fill_gradientn(colors = palette, na.value = NA) +
+  theme_map() +
+  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
+  geom_polygon(data = centamer, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25) +
+  # geom_point(data = coords, aes(x = x, y = y), color = "white") +
+  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25, linetype = "dotted")
+
+# Plot Mexican biogeographic provinces (export 12x8)
+ggplot() +
+  geom_spatraster(data = demmx) +
+  scale_fill_gradientn(colors = palette, na.value = NA) +
+  theme_map() +
+  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
+  # geom_point(data = coords, aes(x = x, y = y), color = "white") +
+  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
+  geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
+>>>>>>> Stashed changes
 
 # Read in all range map shapefiles
 ranges <- import_range_maps(path = here("data", "range_maps"))
@@ -141,6 +227,7 @@ p_ranges +
   theme(legend.position = "none") # export 10x8
 
 
+<<<<<<< Updated upstream
 # Fig. 4: HHSD sampling ---------------------------------------------------
 
 dataset_name = "forreri" # forreri / foothills / mxpl
@@ -192,6 +279,8 @@ ggplot() +
   geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
   geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
 
+=======
+>>>>>>> Stashed changes
 # forreri type localities -------------------------------------------------
 
 # Read in type localities
