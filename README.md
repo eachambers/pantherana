@@ -19,20 +19,21 @@ Analyses were performed on different bioinformatics assemblies of our data. They
 | forreri | 104 | - Admixture <br>- HHSD <br>- Landscape genomics <br>- FEEMS |
 
 ## Bioinformatics pipeline and data processing
-* [Bioinformatics pipeline script](XXX)
+* [Bioinformatics pipeline script](https://github.com/eachambers/pantherana/blob/main/R/bioinformatics_processing.sh)
     1. Runs iPyrad to obtain pooled assembly and four separate assemblies (see table above for details)
-* [Post-processing script](XXX)
+* [Post-processing script](https://github.com/eachambers/pantherana/blob/main/R/basic_data_characteristics.sh)
     1. Gets basic data characteristics from pooled assembly
 * [Basic statistics script](https://github.com/eachambers/pantherana/blob/main/R/Basic_stats.R)
     1. Calculates average read depth from iPyrad stats files
 
 ## Phylogenetic tree inference
-* [RAXML-ng analysis](XXX)
-    1. XXX
-    2. Uses state frequency calculations from [`State_freqs.R`](https://github.com/eachambers/pantherana/blob/main/R/State_freqs.R) for running RAXML-ng with an ascertainment bias correction
+* [RAxML-ng analysis](https://github.com/eachambers/pantherana/blob/main/R/RAXML-ng.sh)
+    1. Uses state frequency calculations from [`State_freqs.R`](https://github.com/eachambers/pantherana/blob/main/R/State_freqs.R) for running RAXML-ng with an ascertainment bias correction
+    2. Removes ambiguous sites that may resolve to being invariant using [`Remove_invariant_sites.R`](https://github.com/eachambers/pantherana/blob/main/R/Remove_invariant_sites.R) script
+    3. Runs RAxML-ng on pooled assembly
 
 ## Population structure analyses
-* [Population structure processing script](XXX)
+* [Population structure processing script](https://github.com/eachambers/pantherana/blob/main/R/population_structure.sh)
     1. Further filters separate assemblies based on missing data
     2. Generates missing data reports for separate assemblies
     3. Removes SNPs based on output from [`LD-pruning.R`](https://github.com/eachambers/pantherana/blob/main/R/LD-pruning.R) script, which performs LD-pruning by selecting one random SNP (the least amount of missing data) for each RAD tag
@@ -47,7 +48,7 @@ Analyses were performed on different bioinformatics assemblies of our data. They
     4. Misc. visualizations of resulting raster PCA
 
 ### FEEMS
-* [FEEMS pre-processing script](XXX)
+* [FEEMS pre-processing script](https://github.com/eachambers/pantherana/blob/main/R/FEEMS_preprocessing.sh)
     1. Further prune based on missing data and remove single individual lacking coordinates
     2. Set up FEEMS environment
 * [FEEMS input files](https://github.com/eachambers/pantherana/blob/main/R/fEEMS.R)
@@ -60,7 +61,7 @@ Analyses were performed on different bioinformatics assemblies of our data. They
     1. Runs a Mantel test, MMRR, GDM, and a PCA
 
 ## Model-based species delimitation
-* [Species delimitation script](XXX)
+* [Species delimitation script](https://github.com/eachambers/pantherana/blob/main/R/HHSD.sh)
     1. Install HHSD
     2. Further prune HHSD datasets on the basis of missing data
     3. Subset vcfs containing only individuals relevant to HHSD analyses
