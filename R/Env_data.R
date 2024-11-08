@@ -8,6 +8,7 @@ library(viridis)
 library(cowplot)
 library(ggrepel)
 library(MVZlibrary)
+library(mxmaps)
 theme_set(theme_cowplot())
 
 ## This code processes environmental data used for landscape genomic analyses for the R. forreri complex:
@@ -18,9 +19,6 @@ theme_set(theme_cowplot())
 ##     (5) Export data
 ##     (6) Fig. S7A: Map out raster PCA results
 ##     (7) Fig. S7B: See how bioclimatic variables load onto raster PCs
-
-##    FILES REQUIRED:
-##          Site data for forreri samples (forreri_sites.txt)
 
 ##    FILES GENERATED:
 ##          forreri_envlayers.tif
@@ -156,6 +154,8 @@ forr_env_r <- terra::rast(forr_env)
 xlim <- c(xmin(forr_env_r), xmax(forr_env_r))
 ylim <- c(ymin(forr_env_r), ymax(forr_env_r))
 
+data("mxstate.map")
+
 ggplot() +
   geom_spatraster(data = forr_env_r[[3]], aes(fill = PC3)) +
   scale_fill_gradientn(colors = palette, na.value = NA, name = "PC3") +
@@ -170,7 +170,7 @@ ggsave(here("plots", "forr_PC3_map.pdf"), width = 10, height = 8, units = "in")
 # (7) Bioclimatic vars in each PC -----------------------------------------
 
 l <- loadings(env_pcs$model)
-loaddf <- data.frame(matrix(as.numeric(l), attributes(l)$dim, dimnames=attributes(l)$dimnames))
+loaddf <- data.frame(matrix(as.numeric(l), attributes(l)$dim, dimnames = attributes(l)$dimnames))
 bioclim <- read_tsv(here("data", "bioclim_vars.txt"), col_names = c("BIO", "Description"))
 
 data <-

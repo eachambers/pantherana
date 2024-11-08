@@ -37,21 +37,25 @@ source(here("R", "Land_gen_functions.R"))
 
 # (1) Calculate site-based genetic distances ------------------------------
 
-# Import site data
-sites <- read_tsv(here("data", "forreri_sites.txt"), col_names = TRUE)
+# Import site data (n=103 because one indv doesn't have a locality)
+sites <- read_tsv(here("data", "forreri_sites.txt"), col_names = TRUE) %>% 
+  na.omit() # V2797 does not have coords
 
-# Import locality information for each individual
+# Import locality information for each individual (n=103)
 samps <- read_tsv(here("data", "forreri_metadata.txt"),
                          col_names = TRUE) %>% 
   dplyr::rename(x = long,
                 y = lat) %>% 
   na.omit() # V2797 does not have coords
 
+# Join above together
+sites <- left_join(samps, sites)
+
 # Import genetic data; 65000 variants
 vcf <- read.vcfR(file = here("data", "forreri_0.25miss_ldp.recode.vcf"))
 
-# Subset vcf to match coords
-index <- colnames(vcf@gt) %in% samps$Bioinformatics_ID
+# Subset vcf to match coords (remove single sample without coords)
+index <- colnames(vcf@gt) %in% sites$Bioinformatics_ID
 # First col is format col
 index[1] <- TRUE
 # Subset vcf to match coords
@@ -66,11 +70,11 @@ dos <- algatr::vcf_to_dosage(vcf) # 951 loci omitted from genlight object becaus
 freqs <- dos/2 # coding is now 0, 0.5, 1 as allele frequencies
 
 # Check ordering consistency between vcf and metadata
-all(colnames(vcf@gt[,-1]) == samps$Bioinformatics_ID) # should be all TRUE, if not run the following lines
+all(colnames(vcf@gt[,-1]) == sites$Bioinformatics_ID) # should be all TRUE, if not run the following lines
 vcford <- colnames(vcf@gt[,-1])
 # Combine lat/longs with site names, arranging so it's ordered the same as vcf - REQUIRED!!!
-sites <- left_join(samps, sites) %>% 
-  arrange(Bioinformatics_ID, vcford)
+sites <- sites %>% arrange(Bioinformatics_ID, vcford)
+# Now check ordering
 all(colnames(vcf@gt[,-1]) == sites$Bioinformatics_ID) # should be TRUE
 
 # Now, calculate mean site-based allele frequencies for each locus
@@ -111,7 +115,7 @@ all(unique_sites$site_name == subsites$site_name)
 # Calculate geographic distances and export
 geodist <- geo_dist(subsites %>% dplyr::select(x, y)) # you will get an NA message if you have more than 2 cols
 colnames(geodist) <- subsites$site_name
-write_tsv(as.data.frame(geodist), file = "forreri_geodist_ldp.txt", col_names = TRUE)
+write_tsv(as.data.frame(geodist), file = here("data", "forreri_geodist_ldp.txt"), col_names = TRUE)
 
 
 # (3) Run Mantel test -----------------------------------------------------
@@ -196,7 +200,7 @@ ggsave(here("plots", "Mantel_test.pdf"), width = 8, height = 6, units = "in")
 
 # Load env data
 forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
-forr_env <- raster::readAll(forr_env)
+# forr_env <- raster::readAll(forr_env)
 
 # Extract enviro vars (3 enviro PCs for each site coordinate)
 env <- raster::extract(forr_env, subsites %>% 
@@ -251,6 +255,9 @@ ggsave(here("plots", "MMRR_results.pdf"), width = 9, height = 3.5, units = "in")
 
 # (7) Run GDM -------------------------------------------------------------
 
+# Load env data
+forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
+
 # Extract vars, same as MMRR
 env <- raster::extract(forr_env, subsites %>% 
                          dplyr::select(x, y))
@@ -277,10 +284,10 @@ gdm_table(gdm_best)
 # (8) Visualize GDM results -----------------------------------------------
 
 # Plot the GDM map
-gdm_map(gdm_best$model, 
-        forr_env, 
-        subsites %>% 
-          dplyr::select(x, y)) # export 10x8
+# gdm_map(gdm_best$model, 
+#         forr_env, 
+#         subsites %>% 
+#           dplyr::select(x, y))
 
 # Extract the GDM map from the GDM model object
 map <- build_gdm_map(gdm_best$model, 

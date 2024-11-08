@@ -298,11 +298,11 @@ for f in *; do mv -v "$f" "${f%.*}.rep1.${f##*.}"; done
 
 # The following code is largely adapted by code provided by Erik Enbody
 
-# fEEMS requires four input files:
-#			1. Plink files (bim, bed, fam) which we'll generate from a vcf file
-#			2. Coordinates file that matches the vcf file (ENSURE ORDERING IS THE SAME!)
-#			3. Custom grid file (discrete global grid) for your geographic region
-#			4. Outer coordinates (a sequence of vertices that outline a closed polygon)
+# FEEMS requires four input files:
+#			1. Plink files (bim, bed, fam) which we'll generate from a vcf file (`forreri_FILT.bed`)
+#			2. Coordinates file that matches the vcf file (ENSURE ORDERING IS THE SAME! `forreri_coords.txt`)
+#			3. Custom grid file (discrete global grid) for your geographic region (`forr_grid.shp`)
+#			4. Outer coordinates (a sequence of vertices that outline a closed polygon; `forreri_outer.txt`)
 # Important notes: this will impute to the mean
 
 # Remove one sample that has no coordinates
@@ -314,6 +314,7 @@ tabix -p vcf forreri_0.25miss_ldp_n103.recode.vcf.gz
 bcftools view -e 'AF==1 | AF==0 | AF<0.01 | ALT="*" | F_MISSING > 0.50' -O v -o forreri_FILT.vcf forreri_0.25miss_ldp_n103.recode.vcf.gz
 
 # Create bim, bed, and fam files from your vcf
+# 17789 variants and 103 samples pass filters and QC
 plink --vcf forreri_FILT.vcf --out forreri_FILT --allow-extra-chr --autosome-num 95 --const-fid --make-bed
 
 # Copy feems.txt from here: https://github.com/NovembreLab/feems/issues/15
@@ -327,7 +328,7 @@ pip install .
 # 1.	Run first two steps of fEEMS.R script to generate input data files.
 # 2.	Run run_feems.py which will generate the spatial graph and also run the cross-validation
 #		analysis.
-# 3.	Run rest of FEEMS.R script to generate figures.
+# 3.	Run the rest of FEEMS.R script to generate figures.
 
 # ========================================================================================
 # ======================================== HHSD ==========================================

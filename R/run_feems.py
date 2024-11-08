@@ -28,8 +28,8 @@ plt.rcParams["font.family"] = "Arial"
 plt.rcParams["font.sans-serif"] = "Arial"
 
 # set a path to where the data will live
-data_path = "/media/WangLab/WangLab/mxrana/run_feems/data"
-output_path = "/media/WangLab/WangLab/mxrana/run_feems/output"
+data_path = "/media/wanglab/798f0e01-89d1-4d0f-8ed8-ef323be70ab9/Anne/run_feems/data"
+output_path = "/media/wanglab/798f0e01-89d1-4d0f-8ed8-ef323be70ab9/Anne/run_feems/output"
 
 # ==== READ IN INPUT FILES
 # read the genotype data and mean impute missing data
