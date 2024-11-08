@@ -13,9 +13,9 @@ Analyses were performed on different bioinformatics assemblies of our data. They
 | Assembly | No. inds | Analyses
 | -------- | ------------- | ------------ |
 | Pooled | 479 | - Phylogenetic inference |
-| ATL_MXPL | 202 | - Admixture <br>- HHSD (*on mxpl, which excluded R. macroglossa*) |
-| PACMX | 274 | - Admixture <br>- HHSD (*on foothills, which excluded R. forreri*) |
-| CENTAM | 158 | - Admixture |
+| ATL_MXPL | 189 | - Admixture <br>- HHSD (*on mxpl, which excluded R. macroglossa*) |
+| PACMX | 245 | - Admixture <br>- HHSD (*on foothills, which excluded R. forreri*) |
+| CENTAM | 140 | - Admixture |
 | forreri | 104 | - Admixture <br>- HHSD <br>- Landscape genomics <br>- FEEMS |
 
 ## Bioinformatics pipeline and data processing
