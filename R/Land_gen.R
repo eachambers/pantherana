@@ -146,7 +146,7 @@ dat <- full_join(melt_gen, melt_geo) %>%
 # spear <- vegan::mantel(gendist, geodist, method = "spearman")
 # spear # Mantel stat r = 0.7411, sig=0.001
 IBD <- vegan::mantel(gendist, log(geodist), method = "pearson")
-IBD # Mantel stat r = 0.7699, sig=0.001
+IBD # Mantel stat r = 0.7667, sig=0.001
 
 
 # (4) Visualize Mantel test -----------------------------------------------
@@ -159,21 +159,21 @@ dat %>%
   ylab("Genetic distance")
 
 # Generalized additive model, density fill
-dat %>% 
-  filter(gendist > 0) %>% 
-  ggplot(aes(x = geodist_km, y = gendist)) +
-  stat_density_2d(aes(fill = after_stat(density), alpha = ..density..), geom = "raster", contour = FALSE, na.rm = TRUE) +
-  scale_fill_distiller(palette = "Spectral", direction = -1) +
-  scale_alpha_continuous(range = c(0, 10), guide = guide_none()) +
-  theme(legend.position = "none") +
-  geom_point(alpha = 0.5) +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  xlab("Geographic distance (km)") +
-  ylab("Genetic distance") +
-  ggtitle("Site-based comparisons (generalized additive model)") +
-  # geom_smooth(se = FALSE, method = "glm")
-  geom_smooth(se = FALSE, method = "gam", formula = y ~ s(log(x)), color = "red", linewidth = 1) # export 8x6
+# dat %>% 
+#   filter(gendist > 0) %>% 
+#   ggplot(aes(x = geodist_km, y = gendist)) +
+#   stat_density_2d(aes(fill = after_stat(density), alpha = ..density..), geom = "raster", contour = FALSE, na.rm = TRUE) +
+#   scale_fill_distiller(palette = "Spectral", direction = -1) +
+#   scale_alpha_continuous(range = c(0, 10), guide = guide_none()) +
+#   theme(legend.position = "none") +
+#   geom_point(alpha = 0.5) +
+#   scale_x_continuous(expand = c(0, 0)) +
+#   scale_y_continuous(expand = c(0, 0)) +
+#   xlab("Geographic distance (km)") +
+#   ylab("Genetic distance") +
+#   ggtitle("Site-based comparisons (generalized additive model)") +
+#   # geom_smooth(se = FALSE, method = "glm")
+#   geom_smooth(se = FALSE, method = "gam", formula = y ~ s(log(x)), color = "red", linewidth = 1) # export 8x6
 
 dat %>% 
   filter(gendist > 0) %>% 

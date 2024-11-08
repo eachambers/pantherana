@@ -55,7 +55,7 @@ points(samps %>% dplyr::select(x, y), pch = 19)
 
 cors_env <- algatr::check_env(env) # 31 pairs of vars had correlation coefficients > 0.7.
 dist <- as.data.frame(cors_env$cor_matrix)
-write_csv(dist, file = "forreri_cors_env.csv", col_names = TRUE)
+write_csv(dist, file = here("data", "forreri_cors_env.csv"), col_names = TRUE)
 
 # Take a look at the collinearity among layers
 dist %>%
@@ -118,7 +118,7 @@ dat %>%
 # (5) Save data -----------------------------------------------------------
 
 # Save env layers
-terra::writeRaster(env, file = "forreri_envlayers.tif",
+terra::writeRaster(env, file = here("data", "forreri_envlayers.tif"),
                    overwrite = TRUE)
 
 # Save top 3 env PCs
@@ -134,7 +134,7 @@ raster::writeRaster(forr_env, here("data", "forreri_PCenv.tif"), overwrite = TRU
 # (6) Plot raster PCA results ---------------------------------------------
 
 # If you haven't run the above, can just start with:
-forr_env <- raster::stack(list.files(here("data", "PC_layers"), full.names = TRUE))
+# forr_env <- raster::stack(list.files(here("data", "PC_layers"), full.names = TRUE))
 
 # Take a look at PCs 1 and 2 plotted
 # pcs <- as.data.frame(forr_env, xy = TRUE)

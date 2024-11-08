@@ -6,3 +6,4 @@ data/.DS_Store
 data/*
 .DS_Store
 plots/*
+tmp/wc2.1_tiles/tile_27_wc2.1_30s_bio.tif
