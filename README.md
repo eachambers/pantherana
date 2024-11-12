@@ -94,5 +94,6 @@ Analyses were performed on different bioinformatics assemblies of our data. They
     2. Plots loadings for environmental PC3: **Fig. S7B**
 * [Gene flow results](https://github.com/eachambers/pantherana/blob/main/R/fEEMS.R)
     1. Plots FEEMS results: **Fig. 5C**
+    2. Plots FEEMS cross-validation analysis results: **Fig. S8**
 * [Rana taxonomic history](https://github.com/eachambers/pantherana/blob/main/R/rana_taxonomy.R)
     1. Plots taxonomic history of the leopard frog complex: **Fig. S2**
