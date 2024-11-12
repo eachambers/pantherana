@@ -308,7 +308,7 @@ ggplot() +
   geom_spatraster_rgb(data = map$pcaRastRGB) +
   geom_spatraster(data = map_mask_sd, aes(fill = sum), alpha = 0.6) +
   scale_fill_gradientn(colors = "white", na.value = NA) +
-  geom_point(data = subsites, aes(x = x, y = y), size = 4, colour = "black", pch = 21) +
+  geom_point(data = subsites, aes(x = x, y = y), size = 4, colour = "#969696", pch = 21) +
   theme_map() +
   theme(legend.position = "none")
 ggsave(here("plots", "forreri_GDM.pdf"), width = 10, height = 8, units = "in")

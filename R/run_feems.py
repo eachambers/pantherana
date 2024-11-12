@@ -111,7 +111,7 @@ ax.set_xlabel("log10(lambda)");
 ax.set_ylabel("L2 CV Error");
 ax.axvline(np.log10(lamb_cv), color = "orange")
 
-plt.savefig("forreri_cv.png") # output_path wasn't working here
+plt.savefig("forreri_cv.png")
 
 # ==== GENERATE MAP
 
@@ -159,10 +159,15 @@ def cov_to_dist(S):
     return(D)
     
 from cov_to_dist import *
+# from misc_functions import cov_to_dist
+# import math
 
 # Initialize figure
 fig = plt.figure(constrained_layout=True, dpi=300, figsize=(6, 6))
 spec = gridspec.GridSpec(ncols=2, nrows=2, figure=fig)
+
+# from scipy.spatial.distance import pdist, squareform
+# from sklearn.metrics.pairwise import haversine_distances
 
 # (A) Genetic distance vs geographic distance
 D_geno = squareform(pdist(genotypes, metric="sqeuclidean")) / p
@@ -192,18 +197,18 @@ ax_00.text(3500, .6, "R²={:.4f}".format(res.rsquared))
 ax_00.set_xlabel("great circle distance (km)")
 ax_00.set_ylabel("genetic distance")
 
-# plt.savefig("forreri_gendistgeodist.png")
+plt.savefig("forreri_gendistgeodist.png")
 
 # (B) Genetic distance vs fitted distance for constant w model 
 tril_idx = np.tril_indices(sp_graph.n_observed_nodes, k=-1)
 ax_01 = fig.add_subplot(spec[0, 1])
 ax_01.set_title("B", loc='left')
-sp_graph.fit_null_model() # takes a few seconds to run
+sp_graph.fit_null_model() # takes a few seconds to run; constant-w/variance fit, converged in 108 iterations, train_loss=489512.7140462
 sp_graph.comp_graph_laplacian(sp_graph.w)
 
 obj = Objective(sp_graph)
 fit_cov, _, emp_cov = comp_mats(obj)
-fit_dist = cov_to_dist(fit_cov)[tril_idx]
+fit_dist = cov_to_dist(fit_cov)[tril_idx] # name np is not defined issue
 emp_dist = cov_to_dist(emp_cov)[tril_idx]
 X = sm.add_constant(fit_dist)
 mod = sm.OLS(emp_dist, X)
@@ -285,14 +290,6 @@ ax_11.plot(x_, muhat + betahat * x_, zorder=2, color="orange", linestyle='--', l
 ax_11.text(4.2, 2, "R²={:.4f}".format(res.rsquared))
 ax_11.set_xlabel("fitted distance ($\lambda = \lambda_{CV}\cdot 10^{-3}$)")
 ax_11.set_ylabel("genetic distance")
-
-
-
-
-
-
-
-
 
 # axis 00 
 ax_00 = fig.add_subplot(spec[0, 0], projection=projection)

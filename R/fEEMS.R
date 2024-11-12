@@ -13,6 +13,7 @@ library(cowplot)
 ##    (2) Creates a discrete global grid for FEEMS
 ##    (3) Imports FEEMS output files
 ##    (4) Makes FEEMS map (Fig. 5C)
+##    (5) Plots FEEMS cross-validation analysis results (Fig. S8)
 
 ##    FILES REQUIRED:
 ##            "forreri_metadata.txt" and "forreri_0.25miss_ldp_n103.recode.vcf"
@@ -64,11 +65,8 @@ sf::st_write(forr_grid, here("data", "forr_grid.shp"), append = FALSE)
 # Adapted from https://github.com/karolisr/pitcairnia-dr-nrv/blob/93534b6906d2a59a821c19deaef649eb1a3fb283/25-geo-dist.R
 
 feems_nodes <- read_csv(here("data", "feems_nodes.csv"), col_names = "node_id", col_types = "i")
-# feems_node_pos <- read_csv(here("data", "feems_node_pos.csv"), col_names = c("lon", "lat"), col_types = "dd")
 feems_edges <- read_csv(here("data", "feems_edges.csv"), col_names = c("n1", "n2"), col_types = "ii")
 feems_w <- read_csv(here("data", "feems_w.csv"), col_names = "w", col_types = "d")
-
-# TODO figure out below
 feems_node_pos <- read_csv(here("data", "feems_node_pos_T.csv"), 
                            col_names = c("lon", "lat", "nsamp"), 
                            col_types = "dd")
@@ -118,10 +116,10 @@ feems_cropped <- st_intersection(feems_new_edges, border)
 
 # (4) Make FEEMS map ------------------------------------------------------
 
-feems.colors <- c('#994000', '#CC5800', '#FF8F33', '#FFAD66',
-                  '#FFCA99', '#FFE6CC', '#FBFBFB', '#CCFDFF',
-                  '#99F8FF', '#66F0FF', '#33E4FF', '#00AACC',
-                  '#007A99')
+# feems.colors <- c('#994000', '#CC5800', '#FF8F33', '#FFAD66',
+#                   '#FFCA99', '#FFE6CC', '#FBFBFB', '#CCFDFF',
+#                   '#99F8FF', '#66F0FF', '#33E4FF', '#00AACC',
+#                   '#007A99')
 
 outer <- read_delim(here("data", "forreri_outer.txt"), col_names = c("long", "lat"))
 
@@ -140,6 +138,22 @@ ggplot() +
   theme_map() +
   geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "gray48", fill = NA, linewidth = 0.25) +
   geom_point(data = nodes %>% filter(nsamp > 0), aes(x = lon, y = lat, size = nsamp), color = "#a8a2ca") +
-  geom_point(data = coords, aes(x = X2, y = X3), color = "black")
+  geom_point(data = coords, aes(x = x, y = y), color = "black")
 
 ggsave(paste0(here("plots"), "/forreri_feems_logwmean.pdf"), width = 10, height = 8, units = "in")
+
+
+# (5) FEEMS cross-validation ----------------------------------------------
+
+cv <- read_csv(here("data", "mean_cv_err.csv"), col_names = "CV_error")
+lamb <- read_csv(here("data", "lamb_grid.csv"), col_names = "lambda")
+cv <- bind_cols(cv, lamb)
+
+theme_set(theme_cowplot())
+cv %>% 
+  ggplot(aes(x = log10(lambda), y = CV_error)) +
+  geom_vline(xintercept = log10(20), color = "red", linetype = "dashed") +
+  geom_point() +
+  ylab("Cross-validation error")
+
+ggsave(here("plots", "FEEMS_cv_plot.pdf"), width = 5, height = 4)
