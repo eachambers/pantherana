@@ -1,5 +1,7 @@
 # Distinguishing species boundaries from geographic variation
 
+***This manuscript is currently in review; therefore, we discourage the use of the following code at this time.***
+
 This repository contains code for analyses and data visualization from:
 
 **Chambers EA, Lara-Tufiño JD, Campillo-García G, Cisneros-Bernal AY, Dudek Jr. DJ, León-Règagnon V, Townsend JH, Flores-Villela O, & Hillis DM. (XXX) Distinguishing species boundaries from geographic variation. *XXX*, [DOI](LINKTODOI).**
