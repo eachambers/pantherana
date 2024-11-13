@@ -116,11 +116,6 @@ feems_cropped <- st_intersection(feems_new_edges, border)
 
 # (4) Make FEEMS map ------------------------------------------------------
 
-# feems.colors <- c('#994000', '#CC5800', '#FF8F33', '#FFAD66',
-#                   '#FFCA99', '#FFE6CC', '#FBFBFB', '#CCFDFF',
-#                   '#99F8FF', '#66F0FF', '#33E4FF', '#00AACC',
-#                   '#007A99')
-
 outer <- read_delim(here("data", "forreri_outer.txt"), col_names = c("long", "lat"))
 
 data("mxstate.map")
@@ -129,10 +124,10 @@ mxstate.map$group <- as.numeric(mxstate.map$group)
 ggplot() +
   geom_sf(data = border, fill = "grey90", color = NA) + 
   geom_sf(data = feems_cropped, aes(color = logwmean), alpha = 0.75) +
-  # scale_color_gradientn(colors = feems.colors) +
   scale_color_gradient2(low = "#FF8F33",
                         mid = "white",
                         high = "#33E4FF") +
+  # scale_color_distiller(palette = "RdBu", direction = 1) +
   geom_sf(data = border, fill = NA, color = "black") +
   coord_sf(xlim = unique(outer$long), ylim = unique(outer$lat)) +
   theme_map() +
