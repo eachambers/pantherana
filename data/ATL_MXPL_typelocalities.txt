@@ -1,9 +1,0 @@
-Species	Latitude	Longitude
-berlandieri	25.916445	-97.485891
-brownorum	18.640319	-92.464611
-neovolcanica	19.970303	-103.766641
-tlaloci	19.246527	-99.108533
-spectabilis	20.171387	-98.756413
-taylori	9.969029	-83.613071
-chichicuahutla	19.37279	-97.382867
-macroglossa	14.746828	-91.161644
