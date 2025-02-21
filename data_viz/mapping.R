@@ -10,9 +10,10 @@ library(rgdal)
 library(viridis)
 theme_set(theme_cowplot())
 
-source(here("R", "Mapping_functions.R"))
-source(here("R", "hhsd_functions.R"))
-source(here("R", "rana_colors.R"))
+source(here("data_viz", "mapping_functions.R"))
+source(here("data_viz", "pop_gen_functions.R"))
+source(here("analysis", "4_hhsd", "hhsd_functions.R"))
+source(here("data_viz", "rana_colors.R"))
 
 ## The following file:
 ##    (1) Imports coordinates
@@ -93,32 +94,10 @@ mxstate.map$group <- as.numeric(mxstate.map$group)
 map_data <-
   bind_rows(centamer, mxstate.map)
 
+usa <- map_data("state")
+
+
 # Range maps --------------------------------------------------------------
-
-# Load biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
-provinces <- readOGR(dsn = here("data", "biogeo_provinces_mx", "rbiog4mgw.shp"), stringsAsFactors = F)
-
-
-# Build plots -------------------------------------------------------------
-
-ggplot() +
-  geom_spatraster(data = dem) +
-  scale_fill_gradientn(colors = palette, na.value = NA) +
-  theme_map() +
-  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  geom_polygon(data = centamer, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25) +
-  # geom_point(data = coords, aes(x = x, y = y), color = "white") +
-  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25, linetype = "dotted")
-
-# Plot Mexican biogeographic provinces (export 12x8)
-ggplot() +
-  geom_spatraster(data = demmx) +
-  scale_fill_gradientn(colors = palette, na.value = NA) +
-  theme_map() +
-  # geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  # geom_point(data = coords, aes(x = x, y = y), color = "white") +
-  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
-  geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
 
 # Read in all range map shapefiles
 ranges <- import_range_maps(path = here("data", "range_maps"))
@@ -147,8 +126,10 @@ p_ranges <-
   geom_polygon(data = ranges$spnov, aes(long, lat, group = group), fill = spp_colors$spnov, alpha = 0.75) +
   geom_polygon(data = ranges$lenca, aes(long, lat, group = group), fill = spp_colors$lenca, alpha = 0.75) +
   # ATL_MXPL species
+  geom_polygon(data = ranges$berl, aes(long, lat, group = group), fill = spp_colors$berl, alpha = 0.75) +
   geom_polygon(data = ranges$macro1, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
   geom_polygon(data = ranges$macro2, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
+  geom_polygon(data = ranges$spec, aes(long, lat, group = group), fill = spp_colors$spec, alpha = 0.75) +
   coord_map(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
   geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # color = "#969696" if CENTAM
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
@@ -165,6 +146,17 @@ p_ranges +
   geom_point(data = tls %>% filter(Status == "notrec"), aes(Longitude, Latitude), shape = 1, color = "black", size = 2) +
   theme(legend.position = "none") # export 10x8
 
+# Instead of type localities, add sampling coordinates, colorized by species
+# allsamps <- read_tsv(here("data", "all_samps.txt")) %>%
+#   na.omit()
+# p_ranges +
+#   geom_point(data = allsamps, aes(x = Longitude, y = Latitude, color = Species), size = 1) +
+#   scale_color_manual(values = c("aten_long" = "#428b9b", "aten_short" = "#c0a06f",
+#                               "berlandieri" = "#984625", "forreri" = "#73806d",
+#                               "lenca" = "#924c62", "macroglossa" = "#e0895a", "magnaocularis" = "#f7cd5e",
+#                               "omiltemana" = "#ba94a6", "spectabilis" = "#80a4bc", "yavapaiensis" = "#054051")) +
+#   geom_point(data = allsamps, aes(x = Longitude, y = Latitude), shape = 1, color = "black", size = 1)
+  
 
 # Fig. 4: HHSD sampling ---------------------------------------------------
 

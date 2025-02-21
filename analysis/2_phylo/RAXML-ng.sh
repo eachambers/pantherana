@@ -5,12 +5,12 @@
 
 # 2.	Now, ask PAUP* to calculate state frequencies (per sample and mean) using:
 > stateFreq
-#			This will output a table (which I've saved as "data/pooled_statefreqs.txt").
+#			This will output a table ("pooled_statefreqs.txt").
 
-# 3.	Run `State_freqs.R` code to calculate state frequencies for each of the pooled assemblies.
+# 3.	Run `state_freqs.R` code to calculate state frequencies for each of the pooled assemblies.
 
 # 4.	We now need to deal with any sites that may resolve to being invariant (due to ambiguous
-#		bases). To do so, run `Remove_invariant_sites.R` on the three SNP datasets.
+#		bases). To do so, run `remove_invariant_sites.R` on the three SNP datasets.
 
 #			rana_n-1.snps_min10K.phy has 350,292 SNPs
 #			Phylip files with potentially invariant sites removed saved as:

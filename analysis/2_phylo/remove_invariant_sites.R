@@ -1,14 +1,11 @@
 library(ape)
 library(devtools)
-# setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Pooled_assembly/iPyrad/outfiles")
-setwd("~/Box Sync/Rana project/ddRADseq/ALL_RANA/Separate_assemblies/iPyrad/")
+library(here)
 
 ## This code removes potentially invariant sites from Phylip files for input into RAxML.
 
 ##    FILES REQUIRED:
-##          rana_n-1.snps_min10K.phy; from Dryad (not on Github)
-##          rana_n-1.snps_max80p.phy; from Dryad (not on Github)
-# TODO include separate assembly phylips on here if I go that direction
+##          rana_n-1.snps_min10K.phy
 
 # Load required functions -------------------------------------------------
 
@@ -264,8 +261,8 @@ run_invarrem <- function(input_file, extralinestoskip = 1, fileFormat = "phy", c
 
 # Run function ------------------------------------------------------------
 
-run_invarrem(input_file = "../Raw_data/78-Hetaerina/78-Hetaerina.pruned.phy",
+run_invarrem(input_file = here("data", "rana_n-1.snps_min10K.phy"),
              extralinestoskip = 1,
              fileFormat = "phy",
              chatty = TRUE,
-             output_file = "../Raw_data/78-Hetaerina/78-Hetaerina.pruned_invarrem.phy")
+             output_file = here("data", "rana_n-1.snps_min10K_invarrem.phy"))

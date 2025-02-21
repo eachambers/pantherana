@@ -1,7 +1,5 @@
 library(tidyverse)
 library(here)
-library(vcfR)
-library(dggridR)
 library(sf)
 library(raster)
 library(terra)
@@ -9,59 +7,14 @@ library(mxmaps)
 library(cowplot)
 
 ## The following file:
-##    (1) Generates input files for FEEMS
-##    (2) Creates a discrete global grid for FEEMS
-##    (3) Imports FEEMS output files
-##    (4) Makes FEEMS map (Fig. 5C)
-##    (5) Plots FEEMS cross-validation analysis results (Fig. S8)
+##    (1) Imports FEEMS output files
+##    (2) Makes FEEMS map (Fig. 5C)
+##    (3) Plots FEEMS cross-validation analysis results (Fig. S9)
 
 ##    FILES REQUIRED:
-##            "forreri_metadata.txt" and "forreri_0.25miss_ldp_n103.recode.vcf"
-##            Shapefile with Mexico + CentAm: "mx_centam_merged.shp" for DGG
 ##            FEEMS output files
 
-
-# (1) Generate input files for FEEMS --------------------------------------
-
-forreri_metadata <- read_tsv(here("data", "forreri_metadata.txt"))
-coords <- forreri_metadata %>% na.omit()
-
-# Verify ordering with vcf
-vcf <- read.vcfR(here("data", "forreri_0.25miss_ldp_n103.recode.vcf"))
-inds <- data.frame(Bioinformatics_ID = colnames(vcf@gt[, -1]))
-coords <- left_join(inds, coords) %>% 
-  dplyr::rename(x = long, y = lat) %>% 
-  dplyr::relocate(y, .after = x)
-
-all(coords$Bioinformatics_ID == colnames(vcf@gt[, -1]))
-
-# write_tsv(coords, here("data", "forreri_coords.txt"), col_names = FALSE)
-
-
-# (2) Create DGG for FEEMS ------------------------------------------------
-
-coords <- read_tsv(here("data", "forreri_coords.txt"), col_names = FALSE) # generated above
-dggs <- dgconstruct(res = 8, projection = "ISEA", aperture = 4, topology = "TRIANGLE")
-
-# Read in borders from shapefile
-border <- sf::st_read(here("data"), layer = "mx_centam_merged")
-st_crs(border) = 4326 # WGS 84
-
-# Get a grid covering Mexico
-forr_grid <- dgshptogrid(dggs, here("data", "mx_centam_merged.shp")) # path to shapefile?
-
-# Plot to check
-ggplot() +
-  geom_sf(data = border, fill = NA, color = "black")   +
-  geom_sf(data = forr_grid, fill = alpha("blue", 0.4), color = alpha("white", 0.4)) +
-  geom_point(data = coords, aes(x = x, y = y), color = "red")
-
-# Save grid
-# st_crs(forr_grid) <- NA
-sf::st_write(forr_grid, here("data", "forr_grid.shp"), append = FALSE)
-
-
-# (3) Import FEEMS output files -------------------------------------------
+# (1) Import FEEMS output files -------------------------------------------
 # Adapted from https://github.com/karolisr/pitcairnia-dr-nrv/blob/93534b6906d2a59a821c19deaef649eb1a3fb283/25-geo-dist.R
 
 feems_nodes <- read_csv(here("data", "feems_nodes.csv"), col_names = "node_id", col_types = "i")
@@ -114,7 +67,7 @@ feems_new_edges <- cbind(feems_edges, geometry) %>%
 feems_cropped <- st_intersection(feems_new_edges, border)
 
 
-# (4) Make FEEMS map ------------------------------------------------------
+# (2) Make FEEMS map ------------------------------------------------------
 
 outer <- read_delim(here("data", "forreri_outer.txt"), col_names = c("long", "lat"))
 
@@ -138,7 +91,7 @@ ggplot() +
 ggsave(paste0(here("plots"), "/forreri_feems_logwmean.pdf"), width = 10, height = 8, units = "in")
 
 
-# (5) FEEMS cross-validation ----------------------------------------------
+# (3) FEEMS cross-validation ----------------------------------------------
 
 cv <- read_csv(here("data", "mean_cv_err.csv"), col_names = "CV_error")
 lamb <- read_csv(here("data", "lamb_grid.csv"), col_names = "lambda")

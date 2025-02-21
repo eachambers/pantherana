@@ -3,7 +3,7 @@
 #	1.	For each of the separate assemblies, we'll remove any individuals that have fewer
 #		than 10K SNPs (called "relaxed").
 
-# 		For ATL_MXPL, stringent (n=189)
+# 		For ATL_MXPL
 vcftools --vcf ATL_MXPL.vcf --keep atlmxpl_indskeep.txt --recode --out ATL_MXPL_relaxed
 # 		For CENTAM, 18 inds removed because of high MD, leaving relaxed (n=140)
 vcftools --vcf new_CENTAM.vcf --keep centam_indskeep.txt --recode --out new_CENTAM_relaxed

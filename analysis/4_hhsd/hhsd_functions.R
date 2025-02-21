@@ -1,6 +1,11 @@
-library(here)
-source(here("R", "Pop_gen.R"))
-
+#' Retrieves how putative species are encoded from admixture results and generates
+#' HHSD Imap file with population assignments
+#'
+#' @param dataset_name separate assembly name; options are "forreri", "mxpl", or "foothills"
+#' @param save_imap whether to save an Imap file for running HHSD (defaults to FALSE)
+#'
+#' @returns
+#' @export
 retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
   if (dataset_name == "forreri") {
     forreri <- import_admix_data(path = here("data", "admixture"), prefix = "forreri_0.25miss_ldp", K_values = 5)
@@ -76,3 +81,50 @@ retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
   return(kcols)
 }
 
+#' Builds figure with HHSD results with gdi and HPDs, faceted on migprior params
+#' TODO add hline separating different assemblies/algorithms?
+#' TODO implement two-level faceting for migpriors == multiple
+#'
+#' @param dat tidy HHSD "decision.csv" results, see `hhsd.R` for how to generate
+#' @param migpriors number of migpriors provided; will be how plot is faceted. Options are "single" or "multiple"
+#'
+#' @returns
+#' @export
+gdi_plot <- function(dat, migpriors) {
+  if (migpriors == "single") {
+    p <- dat %>% 
+      ggplot(aes(x = gdi, y = node)) + 
+      geom_rect(aes(xmin = 0, xmax = 1, ymin = 0, ymax = 2.5),
+                fill = "lightgrey", alpha = 0.5) +
+      geom_vline(xintercept = c(0.2, 0.7), linetype = "dashed", color = "grey30") +
+      geom_errorbar(aes(xmin = hpd_25, xmax = hpd_975), linewidth = 0.5,
+                    position = position_dodge(0.05)) +
+      geom_line() +
+      geom_point(aes(fill = node), color = "black", pch = 21, size = 3) +
+      scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), expand = c(0, 0)) +
+      theme(axis.title.y = element_blank(),
+            legend.position = "none",
+            strip.background = element_blank()) +
+      facet_grid(~algorithm)
+  }
+  if (migpriors == "multiple") {
+    p <- dat %>% 
+      ggplot(aes(x = gdi, y = node)) + 
+      geom_rect(aes(xmin = 0, xmax = 1, ymin = 0, ymax = 2.5),
+                fill = "lightgrey", alpha = 0.5) +
+      geom_vline(xintercept = c(0.2, 0.7), linetype = "dashed", color = "grey30") +
+      geom_errorbar(aes(xmin = hpd_25, xmax = hpd_975), linewidth = 0.5,
+                    position = position_dodge(0.05)) +
+      geom_line() +
+      geom_point(aes(fill = node), color = "black", pch = 21, size = 3) +
+      scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), expand = c(0, 0)) +
+      theme(axis.title.y = element_blank(),
+            legend.position = "none",
+            strip.background = element_blank()) +
+      facet_grid(~migprior)
+    # Two-level facet grid on migprior and algorithm
+    # facet_grid(rows = vars(migprior), cols = vars(algorithm), 
+    #            labeller = plot_labeller, scales = "free_y", switch = "y")
+  }
+  return(p)
+}

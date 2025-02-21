@@ -27,8 +27,8 @@ theme_set(theme_cowplot())
 ##            *_metadata files for assemblies
 ##            *_order.txt for assemblies which specifies how inds are ordered in barplots
 
-source(here("R", "Pop_gen_functions.R"))
-source(here("R", "rana_colors.R"))
+source(here("data_viz", "Pop_gen_functions.R"))
+source(here("data_viz", "rana_colors.R"))
 
 
 # (1) Import ADMIXTURE results --------------------------------------------

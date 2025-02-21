@@ -11,7 +11,7 @@
 #	JA20247 (n=20); pool 1
 #	JA20248 (n=163); pools 1-7
 
-#  We also incorporated several samples from Chambers et al. (2023). We first copied fastqs
+# We also incorporated several samples from Chambers et al. (2023). We first copied fastqs
 # from their SRA archive and re-ran iPyrad steps 2-3 (n=9). This assembly is named "epirana"
 # in our supplementary files; the params file is called "params-epirana.txt".
 
@@ -35,7 +35,7 @@ ipyrad -p params-forreri -s 123456
 ipyrad -p params-PACMX -s 123456
 ipyrad -p params-CENTAM -s 123456
 
-#	Please refer to Table S1 for which samples were assigned into each separate assembly.
+#	Please refer to Dataset S1 for which samples were assigned into each separate assembly.
 #	The separate assemblies are as follows:
 	
 #	PACMX		Pacific coast (lowlands and foothills) of Mexico. Includes described species:
@@ -70,5 +70,5 @@ ipyrad -p params-CENTAM -s 123456
 
 # 2.	For each of these assemblies, we generated missing data proportions in PAUP* using 
 #		a Nexus file for the SNP matrix (see `basic_data_characteristics.sh`). We also 
-#		processed missing data and calculated average read depth using the `Basic_stats.R` 
+#		processed missing data and calculated average read depth using the `basic_stats.R` 
 #		script.

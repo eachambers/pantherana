@@ -8,3 +8,5 @@ data/*
 plots/*
 tmp/wc2.1_tiles/tile_27_wc2.1_30s_bio.tif
 R/all_rana_walkthrough.sh
+analysis/.Rapp.history
+data/.DS_Store

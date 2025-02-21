@@ -4,7 +4,7 @@
 #		Do the same for the .snps file for running pooled assembly in RAxML-ng (rana_n-1.snps.nexus).
 
 # 2.	Import file into PAUP*: (this may take a while as the matrix size is large)
-> execute ~/Desktop/rana_n-1.nexus
+> execute rana_n-1.nexus
 
 # Processing of file "~/Desktop/rana_n-1.nexus" begins...
 # Data read in DNA format
@@ -39,9 +39,3 @@
 #     2015255 characters are constant (proportion = 0.890901)
 #     69627 variable characters are parsimony-uninformative
 #     Number of parsimony-informative characters = 177160
-
-# 4.	We also want to take a look at missing data proportions. To do so, we'll import the SNPs
-# 		Nexus file into PAUP*, and do
-> missdata
-	
-# Data matrix has 632 taxa, 350292 characters

@@ -1,22 +1,25 @@
 library(tidyverse)
 library(here)
-library(cowplot)
-library(maps)
-library(mxmaps) # devtools::install_github("diegovalle/mxmaps")
-library(usmap)
-theme_set(theme_cowplot())
 
-source(here("R", "hhsd_functions.R"))
+source(here("analysis", "4_hhsd", "hhsd_functions.R"))
+
+# example call: `Rscript hhsd.R "forreri_0.6miss_ldp" "forreri"`
+
+#!/usr/bin/env Rscript # leave line commented
+args = commandArgs(trailingOnly = TRUE)
+lmiss_prefix = args[1]
+dataset_name = args[2]
 
 ## The following file generates population assignment files (Imap files) for
 ## HHSD analysis using the results from ADMIXTURE.
 ##    (1) Gathers loci numbers from the lmiss Plink report
 ##    (2) Generates Imap file from ADMIXTURE results
 
+
 # (1) Retrieve loci numbers -----------------------------------------------
 
 # Specify dataset
-lmiss_prefix = "spp_delim/forreri_0.6miss_ldp" # forreri_0.75miss_ldp / foothills / forreri_0.6miss_ldp / mxpl
+# lmiss_prefix = "spp_delim/forreri_0.6miss_ldp" # foothills_07 / forreri_0.6miss_ldp / mxpl
 
 # Get the missing data report generated
 lmiss <- read.table(paste0(lmiss_prefix, ".lmiss"), header = TRUE) %>% 
@@ -33,7 +36,7 @@ write_tsv(loci, paste0(lmiss_prefix, "_locusnames.txt"), col_names = FALSE)
 
 # (2) Generate Imap file --------------------------------------------------
 
-dataset_name = "mxpl" # forreri / foothills / mxpl
+# dataset_name = "mxpl" # forreri / foothills / mxpl
 
 if (dataset_name == "foothills") metadata <- read_tsv(paste0(here("data"), "/PACMX_metadata.txt"), col_names = TRUE)
 if (dataset_name == "forreri") metadata <- read_tsv(paste0(here("data"), "/forreri_metadata.txt"), col_names = TRUE)

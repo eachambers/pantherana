@@ -1,20 +1,16 @@
 library(tidyverse)
 library(here)
 
-theme_set(theme_cowplot())
-
 ## This code does the following:
-##     Calculate average read depth from iPyrad stats files
+##    (1) Calculate average read depth from iPyrad stats files
 
 ##    FILES REQUIRED:
 ##          pooled_dataset_assignments.txt
-##          All s3 stats files from iPyrad output (located: Pooled_assembly/iPyrad/outfiles/stats_files/; not on Github)
+##          All s3 stats files from iPyrad output
 
 ##  Although there is only a single pooled assembly, some individuals needed to be removed
-##  from the pooled assembly based on how much missing data they contained. Two subsets of
-##  samples were created from the pooled assembly:
+##  from the pooled assembly based on how much missing data they contained.
 ##      min_10K dataset contains samples that have at least 10K SNPs (n=555)
-##      80p dataset contains samples that contain at most 80% missing data (n=414)
 
 
 # Calculate average depth -------------------------------------------------
