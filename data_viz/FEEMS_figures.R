@@ -13,8 +13,13 @@ library(cowplot)
 
 ##    FILES REQUIRED:
 ##            FEEMS output files
+##            forreri sampling coordinates
+
 
 # (1) Import FEEMS output files -------------------------------------------
+
+coords <- read_tsv(here("data", "forreri_metadata.txt")) %>% na.omit()
+
 # Adapted from https://github.com/karolisr/pitcairnia-dr-nrv/blob/93534b6906d2a59a821c19deaef649eb1a3fb283/25-geo-dist.R
 
 feems_nodes <- read_csv(here("data", "feems_nodes.csv"), col_names = "node_id", col_types = "i")
@@ -63,6 +68,10 @@ feems_new_edges <- cbind(feems_edges, geometry) %>%
   st_as_sf() %>%
   st_set_crs(4326)
 
+# Read in borders from shapefile
+border <- sf::st_read(here("data"), layer = "mx_centam_merged")
+st_crs(border) = 4326 # WGS 84
+
 # Crop FEEMS edges to borders of MX and CentAm
 feems_cropped <- st_intersection(feems_new_edges, border)
 
@@ -75,18 +84,24 @@ data("mxstate.map")
 mxstate.map$group <- as.numeric(mxstate.map$group)
 
 ggplot() +
-  geom_sf(data = border, fill = "grey90", color = NA) + 
-  geom_sf(data = feems_cropped, aes(color = logwmean), alpha = 0.75) +
+  geom_sf(data = border, fill = "grey90", color = NA) +
+  geom_sf(data = feems_cropped, aes(color = logwmean, linewidth = logwmean), alpha = 0.75) +
+  scale_linewidth(range = c(1, 0.25)) +
+  scale_size_area(max_size = 3) + # custom size scale
   scale_color_gradient2(low = "#FF8F33",
                         mid = "white",
-                        high = "#33E4FF") +
-  # scale_color_distiller(palette = "RdBu", direction = 1) +
+                        high = "#33E4FF",
+                        name = "Effective migration\nrate, log(w)") +
   geom_sf(data = border, fill = NA, color = "black") +
   coord_sf(xlim = unique(outer$long), ylim = unique(outer$lat)) +
   theme_map() +
+  # Add MX state borders
   geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "gray48", fill = NA, linewidth = 0.25) +
+  # Add sampling coordinates and nodes (i.e., sampling coords snapped onto lattice)
   geom_point(data = nodes %>% filter(nsamp > 0), aes(x = lon, y = lat, size = nsamp), color = "#a8a2ca") +
-  geom_point(data = coords, aes(x = x, y = y), color = "black")
+  scale_size(range = c(1, 6)) +
+  guides(linewidth = "none") + # get rid of linewidth legend
+  geom_point(data = coords, aes(x = long, y = lat), color = "black")
 
 ggsave(paste0(here("plots"), "/forreri_feems_logwmean.pdf"), width = 10, height = 8, units = "in")
 

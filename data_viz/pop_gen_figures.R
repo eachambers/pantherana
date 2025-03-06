@@ -287,6 +287,7 @@ list(base_map_sites, pies_to_add$drawn_pies) %>%
 
 # Plot PACMX with ranges --------------------------------------------------
 
+# TODO switch below to using function
 yava <- maptools::readShapePoly("pacmx_ranges/species_19181.shp")
 yava <- fortify(yava)
 magn <- maptools::readShapePoly("pacmx_ranges/species_58656.shp")

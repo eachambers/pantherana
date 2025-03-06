@@ -21,8 +21,12 @@ dataset_name = args[2]
 # Specify dataset
 # lmiss_prefix = "spp_delim/forreri_0.6miss_ldp" # foothills_07 / forreri_0.6miss_ldp / mxpl
 
+miss <- read.table(paste0(lmiss_prefix, ".lmiss"), header = TRUE)
+
+if (max(miss$N_MISS) >= unique(miss$N_GENO)-2) print("There are some SNPs with no (or only 1) ind with data...")
+
 # Get the missing data report generated
-lmiss <- read.table(paste0(lmiss_prefix, ".lmiss"), header = TRUE) %>% 
+lmiss <- miss %>% 
   dplyr::select(SNP) %>% 
   separate(SNP, into = c("locus", "position"), sep = "_") %>% 
   dplyr::select(locus)
