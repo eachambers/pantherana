@@ -20,7 +20,7 @@ ipyrad -m all_rana params-JA19241_pool1_R1.txt params-JA19242_pool11_R1.txt para
 
 # We also had to branch off and remove TF8608_Rber_CMX because there were no clusters formed; 
 # to do so we ran:
-XXX rana_n-1 -b <======================
+ipyrad -p params-rana_n-1.txt -b all_rana - TF8608_Rber_CMX
 
 # ============== Running iPyrad on separate assemblies (subsets of samples) ==============
 

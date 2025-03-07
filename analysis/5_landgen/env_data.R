@@ -17,8 +17,6 @@ theme_set(theme_cowplot())
 ##     (3) Check for collinearity among enviro layers
 ##     (4) Run raster PCA
 ##     (5) Export data
-##     (6) Fig. S7A: Map out raster PCA results
-##     (7) Fig. S7B: See how bioclimatic variables load onto raster PCs
 
 ##    FILES GENERATED:
 ##          forreri_envlayers.tif
@@ -27,7 +25,7 @@ theme_set(theme_cowplot())
 
 # (1) Retrieve metadata ---------------------------------------------------
 
-samps <- read_tsv(here("data", "forreri_metadata.txt"),
+samps <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "forreri_metadata.txt"),
                   col_names = TRUE) %>% 
   dplyr::rename(x = long,
                 y = lat) %>% 
@@ -53,7 +51,7 @@ points(samps %>% dplyr::select(x, y), pch = 19)
 
 cors_env <- algatr::check_env(env) # 31 pairs of vars had correlation coefficients > 0.7.
 dist <- as.data.frame(cors_env$cor_matrix)
-write_csv(dist, file = here("data", "forreri_cors_env.csv"), col_names = TRUE)
+write_csv(dist, file = here("data", "3_Analyses", "4_landgen", "forreri_cors_env.csv"), col_names = TRUE)
 
 # Take a look at the collinearity among layers
 dist %>%
@@ -84,7 +82,7 @@ pcs <- terra::as.data.frame(env_pcs$map, xy = TRUE)
 # How much variance is explained by each env PC?
 summary(env_pcs$model) # <- made this into a txt file externally called "forreri_envpcs_results.txt"
 
-dat <- readr::read_tsv(here("data", "forreri_envpcs_results.txt"), col_names = TRUE) %>% 
+dat <- readr::read_tsv(here("data", "3_Analyses", "4_landgen", "forreri_envpcs_results.txt"), col_names = TRUE) %>% 
   tidyr::pivot_longer(cols = Comp.1:Comp.19,
                       names_to = "comp",
                       values_to = "value")
@@ -116,77 +114,13 @@ dat %>%
 # (5) Save data -----------------------------------------------------------
 
 # Save env layers
-terra::writeRaster(env, file = here("data", "forreri_envlayers.tif"),
+terra::writeRaster(env, file = here("data", "3_Analyses", "4_landgen", "forreri_envlayers.tif"),
                    overwrite = TRUE)
 
 # Save top 3 env PCs
-lapply(1:3, function(x) terra::writeRaster(env_pcs$map[[x]],
-                                           file = paste0(here("data", "PC_layers"), "/forreri_PC", x, ".tif"),
-                                           overwrite = TRUE))
+# lapply(1:3, function(x) terra::writeRaster(env_pcs$map[[x]],
+#                                            file = paste0(here("data", "PC_layers"), "/forreri_PC", x, ".tif"),
+#                                            overwrite = TRUE))
 
-# Stack the top 3 env PCs and save as a single raster
-forr_env <- raster::stack(list.files(here("data", "PC_layers"), full.names = TRUE))
-raster::writeRaster(forr_env, here("data", "forreri_PCenv.tif"), overwrite = TRUE)
-
-
-# (6) Plot raster PCA results ---------------------------------------------
-
-# If you haven't run the above, can just start with:
-# forr_env <- raster::stack(list.files(here("data", "PC_layers"), full.names = TRUE))
-
-# Take a look at PCs 1 and 2 plotted
-# pcs <- as.data.frame(forr_env, xy = TRUE)
-# p_hex12 <-
-#   pcs %>% 
-#   ggplot(aes(x = PC1, y = PC2)) +
-#   geom_hex() +
-#   coord_equal() +
-#   scale_fill_viridis(option = "A") # export 8x6
-
-# Read in borders from shapefile
-border <- sf::st_read(here("data"), layer = "mx_centam_merged")
-sf::st_crs(border) = 4326 # WGS 84
-
-pal <- MVZ_palette("LifeHistories",  type = "discrete")
-palette = grDevices::colorRampPalette(pal)(100)
-
-forr_env_r <- terra::rast(forr_env)
-xlim <- c(xmin(forr_env_r), xmax(forr_env_r))
-ylim <- c(ymin(forr_env_r), ymax(forr_env_r))
-
-data("mxstate.map")
-
-ggplot() +
-  geom_spatraster(data = forr_env_r[[3]], aes(fill = PC3)) +
-  scale_fill_gradientn(colors = palette, na.value = NA, name = "PC3") +
-  theme_map() +
-  geom_sf(data = border, fill = NA, color = "white", size = 0.5) +
-  coord_sf(xlim = xlim, ylim = ylim) +
-  geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
-  geom_point(data = samps, aes(x = x, y = y))
-ggsave(here("plots", "forr_PC3_map.pdf"), width = 10, height = 8, units = "in")
-
-
-# (7) Bioclimatic vars in each PC -----------------------------------------
-
-l <- loadings(env_pcs$model)
-loaddf <- data.frame(matrix(as.numeric(l), attributes(l)$dim, dimnames = attributes(l)$dimnames))
-bioclim <- read_tsv(here("data", "bioclim_vars.txt"), col_names = c("BIO", "Description"))
-
-data <-
-  loaddf %>% 
-  rownames_to_column(var = "BIO") %>% 
-  left_join(., bioclim)
-
-ggplot() +
-  geom_hline(yintercept = 0, linewidth = 0.5, color = "gray") +
-  geom_vline(xintercept = 0, linewidth = 0.5, color = "gray") +
-  geom_segment(data = loaddf, aes(x = 0, y = 0, xend = Comp.1, yend = Comp.3), arrow = arrow(length = unit(0.2, "cm"))) +
-  geom_text(data = data, aes(x = Comp.1, y = Comp.3, label = BIO), size = 4) +
-  # geom_text_repel(data = data, aes(x = Comp.1, y = Comp.3, label = Description), size = 4) +
-  coord_equal() +
-  xlab("PC1") +
-  ylab("PC3") +
-  theme(axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10))
-ggsave(here("plots", "forr_PC3_loadings.pdf"), width = 2.5, units = "in")
+# Save env PCs as a single raster
+raster::writeRaster(env_pcs$map, here("data", "3_Analyses", "4_landgen", "forreri_PCenv.tif"), overwrite = TRUE)

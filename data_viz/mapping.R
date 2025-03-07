@@ -6,7 +6,7 @@ library(cowplot)
 library(elevatr)
 library(mxmaps)
 library(tidyterra)
-library(rgdal)
+# library(rgdal)
 library(viridis)
 theme_set(theme_cowplot())
 
@@ -26,12 +26,12 @@ source(here("data_viz", "rana_colors.R"))
 
 ##    FILES REQUIRED:
 ##            *_metadata.txt # metadata for each of the four separate assemblies
-##            PC_layers/ # directory with PC layers (use `Env_data.R` script to generate)
+##            PC_layers/ # Environmental PC layers (generated using `Env_data.R`)
 
 
-# Import coordinates ------------------------------------------------------
+# (1) Import coordinates --------------------------------------------------
 
-files <- list.files(here("data"), pattern = "_metadata.txt", full.names = TRUE)
+files <- list.files(here("data", "2_Data_processing", "data_files_input_into_scripts"), pattern = "_metadata.txt", full.names = TRUE)
 fs <- 1:length(files)
 coords <- 
   fs %>% 
@@ -100,11 +100,11 @@ usa <- map_data("state")
 # Range maps --------------------------------------------------------------
 
 # Read in all range map shapefiles
-ranges <- import_range_maps(path = here("data", "range_maps"))
+ranges <- import_range_maps(path = here("data", "4_Data_visualization", "data_files_input_into_scripts", "range_maps"))
 # Read in type localities
-tls <- read_tsv(here("data", "type_localities.txt"))
+tls <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "type_localities.txt"))
 # Get colors
-spp_colors <- mapping_colors(here("data", "type_localities_rec.txt"))
+spp_colors <- mapping_colors(here("data", "4_Data_visualization", "data_files_input_into_scripts", "type_localities_rec.txt"))
 
 # Make range map
 p_ranges <-
@@ -113,24 +113,22 @@ p_ranges <-
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") +
   theme_map() +
   # forreri
-  geom_polygon(data = ranges$forr, aes(long, lat, group = group), fill = spp_colors$forr, alpha = 0.75) +
+  geom_sf(data = ranges$forr, fill = spp_colors$forr, color = NA, alpha = 0.75) +
   # foothills species
-  geom_polygon(data = ranges$yava, aes(long, lat, group = group), fill = spp_colors$yava, alpha = 0.75) +
-  geom_polygon(data = ranges$magn, aes(long, lat, group = group), fill = spp_colors$magn, alpha = 0.75) +
-  geom_polygon(data = ranges$omil, aes(long, lat, group = group), fill = spp_colors$omil, alpha = 0.75) +
-  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), color = "#428b9b") +
-  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), color = "#c0a06f") +
-  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), shape = 1, color = "black") +
-  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), shape = 1, color = "black") +
-  # CENTAM species
-  geom_polygon(data = ranges$spnov, aes(long, lat, group = group), fill = spp_colors$spnov, alpha = 0.75) +
-  geom_polygon(data = ranges$lenca, aes(long, lat, group = group), fill = spp_colors$lenca, alpha = 0.75) +
+  geom_sf(data = ranges$yava, color = NA, fill = spp_colors$yava, alpha = 0.75) +
+  geom_sf(data = ranges$magn, color = NA, fill = spp_colors$magn, alpha = 0.75) +
+  geom_sf(data = ranges$omil, color = NA, fill = spp_colors$omil, alpha = 0.75) +
+  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), fill = "#428b9b", color = "black", pch = 21) +
+  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), fill = "#c0a06f", color = "black", pch = 21) +
   # ATL_MXPL species
-  geom_polygon(data = ranges$berl, aes(long, lat, group = group), fill = spp_colors$berl, alpha = 0.75) +
-  geom_polygon(data = ranges$macro1, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
-  geom_polygon(data = ranges$macro2, aes(long, lat, group = group), fill = spp_colors$macro, alpha = 0.75) +
-  geom_polygon(data = ranges$spec, aes(long, lat, group = group), fill = spp_colors$spec, alpha = 0.75) +
-  coord_map(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
+  geom_sf(data = ranges$berl, color = NA, fill = spp_colors$berl, alpha = 0.75) +
+  geom_sf(data = ranges$macro1, color = NA, fill = spp_colors$macro, alpha = 0.75) +
+  geom_sf(data = ranges$macro2, color = NA, fill = spp_colors$macro, alpha = 0.75) +
+  geom_sf(data = ranges$spec, color = NA, fill = spp_colors$spec, alpha = 0.75) +
+  # CENTAM species
+  geom_sf(data = ranges$spnov, color = NA, fill = spp_colors$spnov, alpha = 0.75) +
+  geom_sf(data = ranges$lenca, color = NA, fill = spp_colors$lenca, alpha = 0.75) +
+  coord_sf(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
   geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # color = "#969696" if CENTAM
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
 
@@ -162,9 +160,9 @@ p_ranges +
 
 dataset_name = "forreri" # forreri / foothills / mxpl
 
-if (dataset_name == "foothills") metadata <- read_tsv(paste0(here("data"), "/PACMX_metadata.txt"), col_names = TRUE)
-if (dataset_name == "forreri") metadata <- read_tsv(paste0(here("data"), "/forreri_metadata.txt"), col_names = TRUE)
-if (dataset_name == "mxpl") metadata <- read_tsv(paste0(here("data"), "/ATL_MXPL_metadata.txt"), col_names = TRUE)
+if (dataset_name == "foothills") metadata <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "PACMX_metadata.txt"), col_names = TRUE)
+if (dataset_name == "forreri") metadata <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "forreri_metadata.txt"), col_names = TRUE)
+if (dataset_name == "mxpl") metadata <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "ATL_MXPL_metadata.txt"), col_names = TRUE)
 if (dataset_name == "forreri") colvals = c("hilli" = "#428b9b", "miad" = "#73806d", "arce" = "#d2a3a6", "forr" = "gray74", "flor" = "gray30")
 if (dataset_name == "foothills") colvals = c("omig" = "#a8a2ca", "magn" = "#f7cd5e", "omio" = "#ba94a6", 
                                              "yava" = "#054051", "ates" = "#c0a06f", "atel" = "#428b9b")
@@ -197,7 +195,7 @@ p_base +
 # Fig. S3: DEM with biogeo provinces --------------------------------------
 
 # Import biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
-provinces <- readOGR(dsn = here("data", "biogeo_provinces_mx", "rbiog4mgw.shp"), stringsAsFactors = F)
+provinces <- sf::st_read(here("data", "4_Data_visualization", "data_files_input_into_scripts", "biogeo_provinces_mx", "rbiog4mgw.shp"))
 
 # Plot Mexican biogeographic provinces (export 12x8)
 ggplot() +
@@ -206,14 +204,14 @@ ggplot() +
   theme_map() +
   geom_polygon(data = mxstate.map, aes(x = long, y = lat, group = group), color = "grey40", fill = NA, linewidth = 0.25, linetype = "dashed") +
   # geom_point(data = coords, aes(x = x, y = y), color = "pink") +
-  geom_polygon(data = provinces, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
+  geom_sf(data = provinces, color = "white", fill = NA, linewidth = 0.25) + # linetype = "dashed"
   geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
 
 
 # forreri type localities -------------------------------------------------
 
 # Read in type localities
-types <- read_tsv(here("data", "forreri_typelocalities.txt"), col_names = TRUE)
+types <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "forreri_typelocalities.txt"), col_names = TRUE)
 
 ## Build background map
 world <- map_data("world")
@@ -234,11 +232,8 @@ base_map <-
   geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.25) +
   theme_map() +
   geom_point(data = final, aes(long, lat), size = 2) +
-  geom_point(data = types, aes(x = longitude, y = latitude), size = 2, color = "red") +
+  geom_point(data = types, aes(x = Longitude, y = Latitude), size = 2, color = "red") +
   coord_fixed()
-
-base_map +
-  geom_point(data = types, aes(x = longitude, y = latitude), size = 2)
 
 
 # Plateau of Guatemala ----------------------------------------------------
@@ -254,8 +249,8 @@ demguat2[demguat <= min] <- NA
 # Convert to SpatRaster for plotting
 demguat <- terra::rast(demguat2)
   
-plat_guat <- readOGR(dsn = here("data", "range_maps", "plateau_de_guatemala.shp"), stringsAsFactors = F)
-guat_cities <- read_tsv(here("data", "guatemala_bocourt.txt"))
+plat_guat <- sf::st_read(here("data", "4_Data_visualization", "data_files_input_into_scripts", "range_maps", "plateau_de_guatemala.shp"))
+guat_cities <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "guatemala_bocourt.txt"))
 
 ggplot() +
   geom_spatraster(data = demguat) +
@@ -263,7 +258,7 @@ ggplot() +
   theme_map() +
   geom_polygon(data = guat, aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5) +
   # geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico" | region == "Guatemala" | region == "Honduras" | region == "El Salvador"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.25) +
-  geom_polygon(data = plat_guat, aes(x = long, y = lat, group = group), fill = "darkorange", color = "white", alpha = 0.4, linetype = "dashed", linewidth = 1) +
+  geom_sf(data = plat_guat, fill = "darkorange", color = "white", alpha = 0.4, linetype = "dashed", linewidth = 1) +
   # geom_point(data = guat_cities, aes(x = long, y = lat)) +
   coord_sf(ylim = c(min(guat$lat)-0.5, max(guat$lat)+0.5),
            xlim = c(min(guat$long)-0.5, max(guat$long)+0.5))  

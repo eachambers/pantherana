@@ -18,14 +18,18 @@ library(cowplot)
 
 # (1) Import FEEMS output files -------------------------------------------
 
-coords <- read_tsv(here("data", "forreri_metadata.txt")) %>% na.omit()
+coords <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", 
+                        "forreri_metadata.txt")) %>% na.omit()
 
 # Adapted from https://github.com/karolisr/pitcairnia-dr-nrv/blob/93534b6906d2a59a821c19deaef649eb1a3fb283/25-geo-dist.R
 
-feems_nodes <- read_csv(here("data", "feems_nodes.csv"), col_names = "node_id", col_types = "i")
-feems_edges <- read_csv(here("data", "feems_edges.csv"), col_names = c("n1", "n2"), col_types = "ii")
-feems_w <- read_csv(here("data", "feems_w.csv"), col_names = "w", col_types = "d")
-feems_node_pos <- read_csv(here("data", "feems_node_pos_T.csv"), 
+feems_nodes <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "feems_nodes.csv"), 
+                        col_names = "node_id", col_types = "i")
+feems_edges <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "feems_edges.csv"), 
+                        col_names = c("n1", "n2"), col_types = "ii")
+feems_w <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "feems_w.csv"), 
+                    col_names = "w", col_types = "d")
+feems_node_pos <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "feems_node_pos_T.csv"), 
                            col_names = c("lon", "lat", "nsamp"), 
                            col_types = "dd")
 
@@ -69,16 +73,17 @@ feems_new_edges <- cbind(feems_edges, geometry) %>%
   st_set_crs(4326)
 
 # Read in borders from shapefile
-border <- sf::st_read(here("data"), layer = "mx_centam_merged")
+border <- sf::st_read(here("data", "2_Data_processing", "data_files_input_into_scripts"), layer = "mx_centam_merged")
 st_crs(border) = 4326 # WGS 84
 
 # Crop FEEMS edges to borders of MX and CentAm
 feems_cropped <- st_intersection(feems_new_edges, border)
 
 
-# (2) Make FEEMS map ------------------------------------------------------
+# (2) Fig. 5C: FEEMS map --------------------------------------------------
 
-outer <- read_delim(here("data", "forreri_outer.txt"), col_names = c("long", "lat"))
+outer <- read_delim(here("data", "3_Analyses", "5_feems", "input_files", "forreri_outer.txt"), 
+                    col_names = c("long", "lat"))
 
 data("mxstate.map")
 mxstate.map$group <- as.numeric(mxstate.map$group)
@@ -103,13 +108,13 @@ ggplot() +
   guides(linewidth = "none") + # get rid of linewidth legend
   geom_point(data = coords, aes(x = long, y = lat), color = "black")
 
-ggsave(paste0(here("plots"), "/forreri_feems_logwmean.pdf"), width = 10, height = 8, units = "in")
+ggsave(here("plots", "Fig5C_forreri_feems_logwmean.pdf"), width = 10, height = 8, units = "in")
 
 
-# (3) FEEMS cross-validation ----------------------------------------------
+# (3) Fig. S9: FEEMS cross-validation -------------------------------------
 
-cv <- read_csv(here("data", "mean_cv_err.csv"), col_names = "CV_error")
-lamb <- read_csv(here("data", "lamb_grid.csv"), col_names = "lambda")
+cv <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "mean_cv_err.csv"), col_names = "CV_error")
+lamb <- read_csv(here("data", "3_Analyses", "5_feems", "output_files", "lamb_grid.csv"), col_names = "lambda")
 cv <- bind_cols(cv, lamb)
 
 theme_set(theme_cowplot())
@@ -119,4 +124,4 @@ cv %>%
   geom_point() +
   ylab("Cross-validation error")
 
-ggsave(here("plots", "FEEMS_cv_plot.pdf"), width = 5, height = 4)
+ggsave(here("plots", "FigS9_FEEMS_cv_plot.pdf"), width = 5, height = 4)

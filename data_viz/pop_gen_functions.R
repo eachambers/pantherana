@@ -7,14 +7,14 @@
 #' @return
 #' @export
 import_admix_data <- function(path = ".", prefix, K_values){
-  ids <- read_table(paste0(path, "/", prefix, ".fam"), col_names = FALSE) %>% 
+  ids <- read_table(paste0(path, "/input_files/", prefix, ".fam"), col_names = FALSE) %>% 
     dplyr::select(X2) %>%
     pull(X2)
   
-  files <- intersect(list.files(path = path, pattern = ".out", full.names = TRUE),
-                     list.files(path = path, pattern = prefix, full.names = TRUE))
-  shortfiles <- intersect(list.files(path = path, pattern = ".out", full.names = FALSE),
-                          list.files(path = path, pattern = prefix, full.names = FALSE))
+  files <- intersect(list.files(path = paste0(path, "/output_files"), pattern = ".out", full.names = TRUE),
+                     list.files(path = paste0(path, "/output_files"), pattern = prefix, full.names = TRUE))
+  shortfiles <- intersect(list.files(path = paste0(path, "/output_files"), pattern = ".out", full.names = FALSE),
+                          list.files(path = paste0(path, "/output_files"), pattern = prefix, full.names = FALSE))
 
   cv_scores <-
     1:length(files) %>% 
@@ -61,7 +61,7 @@ import_admix_data <- function(path = ".", prefix, K_values){
 #' @export
 import_admix_helper <- function(path, prefix, K_value, rep, ids){
   dat <-
-    read_delim(paste0(path, "/", prefix, ".", K_value, ".rep", rep, ".Q"), col_names = FALSE) %>%
+    read_delim(paste0(path, "/output_files/", prefix, ".", K_value, ".rep", rep, ".Q"), col_names = FALSE) %>%
     rowwise() %>% 
     mutate(max_K_val = max(c_across(everything()))) %>% 
     rowwise() %>% 
@@ -91,7 +91,7 @@ plot_cv_error <- function(cv_scores, bestk, hilite, faceted = FALSE){
     ggplot2::ggplot(aes(x = K, y = mean)) +
     annotate("rect", xmin = min(hilite), xmax = max(hilite), ymin = 0, ymax = max(cv_scores$cv),
              alpha = 0.5, fill = "#88a1c6") +
-    ggplot2::geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), width = 0.2, color = "darkgrey") +
+    ggplot2::geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), linewidth = 0.2, color = "darkgrey") +
     ggplot2::geom_point() +
     ggplot2::geom_line(aes(group = 1)) +
     scale_x_continuous(breaks = unique(cv_scores$K)) +

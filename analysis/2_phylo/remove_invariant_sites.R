@@ -5,7 +5,7 @@ library(here)
 ## This code removes potentially invariant sites from Phylip files for input into RAxML.
 
 ##    FILES REQUIRED:
-##          rana_n-1.snps_min10K.phy
+##          pooled_rana.snps_min10K.phy
 
 # Load required functions -------------------------------------------------
 
@@ -261,8 +261,8 @@ run_invarrem <- function(input_file, extralinestoskip = 1, fileFormat = "phy", c
 
 # Run function ------------------------------------------------------------
 
-run_invarrem(input_file = here("data", "rana_n-1.snps_min10K.phy"),
+run_invarrem(input_file = here("data", "3_Analyses", "1_phylo", "input_files", "pooled_rana.snps_min10K.phy"),
              extralinestoskip = 1,
              fileFormat = "phy",
              chatty = TRUE,
-             output_file = here("data", "rana_n-1.snps_min10K_invarrem.phy"))
+             output_file = here("data", "3_Analyses", "1_phylo", "input_files", "pooled_rana.snps_min10K_invarrem.phy"))

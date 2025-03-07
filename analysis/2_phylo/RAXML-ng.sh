@@ -20,4 +20,4 @@
 #		The numbers specified in the ASC {}s are the number of *invariant* A/C/G/T sites.The 
 #		line of code to run will be the following:
 
-./raxml-ng --model GTR+G+ASC_STAM{631110/495387/508960/626585} --all --tree rand --bs-trees 200 --threads 24 --msa /scratch/03123/eac3496/rana_n-1.snps_min10K_invarrem.phy --prefix min10K
+./raxml-ng --model GTR+G+ASC_STAM{631110/495387/508960/626585} --all --tree rand --bs-trees 200 --threads 24 --msa pooled_rana.snps_min10K_invarrem.phy --prefix pruned

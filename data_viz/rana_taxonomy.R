@@ -11,7 +11,7 @@ theme_set(theme_cowplot())
 ##            rana_taxonomy.txt # Taxonomic history of the group
 
 
-tax <- read_tsv(here("data", "rana_taxonomy.txt"), col_names = TRUE)
+tax <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "rana_taxonomy.txt"), col_names = TRUE)
 
 plot <-
   tax %>% 

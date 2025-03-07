@@ -17,11 +17,12 @@ library(terra)
 
 # (1) Generate input files for FEEMS --------------------------------------
 
-forreri_metadata <- read_tsv(here("data", "forreri_metadata.txt"))
+forreri_metadata <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "forreri_metadata.txt"))
 coords <- forreri_metadata %>% na.omit()
 
 # Verify ordering with vcf
-vcf <- read.vcfR(here("data", "forreri_0.25miss_ldp_n103.recode.vcf"))
+vcf <- read.vcfR(here("data", "3_Analyses", "5_feems", "input_files", 
+                      "forreri_0.25miss_ldp_n103.recode.vcf"))
 inds <- data.frame(Bioinformatics_ID = colnames(vcf@gt[, -1]))
 coords <- left_join(inds, coords) %>% 
   dplyr::rename(x = long, y = lat) %>% 
@@ -29,20 +30,23 @@ coords <- left_join(inds, coords) %>%
 
 all(coords$Bioinformatics_ID == colnames(vcf@gt[, -1]))
 
-# write_tsv(coords, here("data", "forreri_coords.txt"), col_names = FALSE)
+write_tsv(coords, here("data", "3_Analyses", "5_feems", "input_files", "forreri_coords.txt"), col_names = FALSE)
 
 
 # (2) Create DGG for FEEMS ------------------------------------------------
 
-coords <- read_tsv(here("data", "forreri_coords.txt"), col_names = FALSE) # generated above
+# coords <- read_tsv(here("data", "3_Analyses", "5_feems", "input_files", "forreri_coords.txt"), 
+#                    col_names = FALSE) # generated above
 dggs <- dgconstruct(res = 8, projection = "ISEA", aperture = 4, topology = "TRIANGLE")
 
 # Read in borders from shapefile
-border <- sf::st_read(here("data"), layer = "mx_centam_merged")
+border <- sf::st_read(here("data", "2_Data_processing", "data_files_input_into_scripts"), 
+                      layer = "mx_centam_merged")
 st_crs(border) = 4326 # WGS 84
 
 # Get a grid covering Mexico
-forr_grid <- dgshptogrid(dggs, here("data", "mx_centam_merged.shp")) # path to shapefile?
+forr_grid <- dgshptogrid(dggs, here("data", "2_Data_processing", "data_files_input_into_scripts", 
+                                    "mx_centam_merged.shp"))
 
 # Plot to check
 ggplot() +
@@ -52,4 +56,4 @@ ggplot() +
 
 # Save grid
 # st_crs(forr_grid) <- NA
-sf::st_write(forr_grid, here("data", "forr_grid.shp"), append = FALSE)
+sf::st_write(forr_grid, here("data", "3_Analyses", "5_feems", "input_files", "forr_grid.shp"), append = FALSE)

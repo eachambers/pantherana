@@ -16,7 +16,7 @@ library(SNPRelate)
 library(tidyterra)
 theme_set(theme_cowplot())
 
-source(here("R", "Land_gen_functions.R"))
+source(here("analysis", "5_landgen", "land_gen_functions.R"))
 
 ## This code performs landscape genomic analyses related to testing for IBD in the R. forreri complex:
 ##     (1) Calculate site-based genetic distances
@@ -32,17 +32,17 @@ source(here("R", "Land_gen_functions.R"))
 ##          LD-pruned vcf (forreri_0.25miss_ldp.recode.vcf)
 ##          Sample IDs and coords (forreri_metadata.txt)
 ##          Unique sampling sites (forreri_sites.txt)
-##          files in PC_layers/ - Environmental PCs (from raster PCA in Env_data.R)
+##          Environmental PCs (forreri_PCenv.tif)
 
 
 # (1) Calculate site-based genetic distances ------------------------------
 
 # Import site data (n=103 because one indv doesn't have a locality)
-sites <- read_tsv(here("data", "forreri_sites.txt"), col_names = TRUE) %>% 
+sites <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "forreri_sites.txt"), col_names = TRUE) %>% 
   na.omit() # V2797 does not have coords
 
 # Import locality information for each individual (n=103)
-samps <- read_tsv(here("data", "forreri_metadata.txt"),
+samps <- read_tsv(here("data",  "2_Data_processing", "data_files_input_into_scripts", "forreri_metadata.txt"),
                          col_names = TRUE) %>% 
   dplyr::rename(x = long,
                 y = lat) %>% 
@@ -52,7 +52,8 @@ samps <- read_tsv(here("data", "forreri_metadata.txt"),
 sites <- left_join(samps, sites)
 
 # Import genetic data; 65000 variants
-vcf <- read.vcfR(file = here("data", "forreri_0.25miss_ldp.recode.vcf"))
+vcf <- read.vcfR(file = here("data", "3_Analyses", "2_popgen", "forreri", "input_files", 
+                             "forreri_0.25miss_ldp.recode.vcf"))
 
 # Subset vcf to match coords (remove single sample without coords)
 index <- colnames(vcf@gt) %in% sites$Bioinformatics_ID
@@ -81,13 +82,14 @@ all(colnames(vcf@gt[,-1]) == sites$Bioinformatics_ID) # should be TRUE
 # !BE AWARE: the following changes the ordering of the sites; ensure these are consistent
 # between gendist and geodist matrices
 site_freqs <- aggregate(freqs, list(sites$site_name), FUN = mean, na.rm = TRUE) # 38 obs of 64050 vars
-write_tsv(site_freqs, here("data", "site_freqs.txt"))
+write_tsv(site_freqs, here("data", "3_Analyses", "4_landgen", "forreri_site_freqs.txt"))
 
 # Finally, calculate genetic distances and export:
 gendist <- as.matrix(dist(site_freqs, method = "euclidean"))
 unique_sites <- site_freqs[1]
 colnames(gendist) <- unique_sites$Group.1
-write_tsv(as.data.frame(gendist), file = here("data", "forreri_gendist_ldp.txt"), col_names = TRUE)
+write_tsv(as.data.frame(gendist), file = here("data", "3_Analyses", "4_landgen", 
+                                              "forreri_gendist_ldp.txt"), col_names = TRUE)
 
 
 # (2) Calculate site-based geographic distances ---------------------------
@@ -115,7 +117,8 @@ all(unique_sites$site_name == subsites$site_name)
 # Calculate geographic distances and export
 geodist <- geo_dist(subsites %>% dplyr::select(x, y)) # you will get an NA message if you have more than 2 cols
 colnames(geodist) <- subsites$site_name
-write_tsv(as.data.frame(geodist), file = here("data", "forreri_geodist_ldp.txt"), col_names = TRUE)
+write_tsv(as.data.frame(geodist), file = here("data",  "3_Analyses", "4_landgen", 
+                                              "forreri_geodist_ldp.txt"), col_names = TRUE)
 
 
 # (3) Run Mantel test -----------------------------------------------------
@@ -153,7 +156,7 @@ IBD <- vegan::mantel(gendist, log(geodist), method = "pearson")
 IBD # Mantel stat r = 0.7667, sig=0.001
 
 
-# (4) Visualize Mantel test -----------------------------------------------
+# (4) Fig. S6: Mantel test ------------------------------------------------
 
 # First, let's just see what this looks like plotted
 dat %>% 
@@ -193,14 +196,13 @@ dat %>%
   ylab("Genetic distance") +
   ggtitle("Site-based comparisons")
 
-ggsave(here("plots", "Mantel_test.pdf"), width = 8, height = 6, units = "in")
+ggsave(here("plots", "FigS6_Mantel_test.pdf"), width = 8, height = 6, units = "in")
 
 
 # (5) Run MMRR ------------------------------------------------------------
 
 # Load env data
-forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
-# forr_env <- raster::readAll(forr_env)
+forr_env <- raster::stack(here("data", "3_Analyses", "4_landgen", "forreri_PCenv.tif"))
 
 # Extract enviro vars (3 enviro PCs for each site coordinate)
 env <- raster::extract(forr_env, subsites %>% 
@@ -225,9 +227,8 @@ mmrr_plot_vars(Y, X, stdz = TRUE)
 mmrr_table(results_best, digits = 2, summary_stats = TRUE)
 
 
-# (6) Visualize MMRR results ----------------------------------------------
+# (6) Fig. 5A: MMRR results -----------------------------------------------
 
-# Build MMRR plot: Fig. 5A
 stdz = TRUE
 # Unfold X and Y
 y <- unfold(Y, scale = stdz)
@@ -255,13 +256,6 @@ ggsave(here("plots", "MMRR_results.pdf"), width = 9, height = 3.5, units = "in")
 
 # (7) Run GDM -------------------------------------------------------------
 
-# Load env data
-forr_env <- raster::stack(list.files(here("data", "PC_layers/"), full.names = TRUE))
-
-# Extract vars, same as MMRR
-env <- raster::extract(forr_env, subsites %>% 
-                         dplyr::select(x, y))
-
 gdm_best <- gdm_run(gendist, 
                     coords = subsites %>% 
                       dplyr::select(x, y), 
@@ -281,7 +275,7 @@ gdm_plot_isplines(gdm_best$model)
 gdm_table(gdm_best)
 
 
-# (8) Visualize GDM results -----------------------------------------------
+# (8) Fig. 5B: GDM results ------------------------------------------------
 
 # Plot the GDM map
 # gdm_map(gdm_best$model, 
@@ -311,7 +305,7 @@ ggplot() +
   geom_point(data = subsites, aes(x = x, y = y), size = 4, colour = "#969696", pch = 21) +
   theme_map() +
   theme(legend.position = "none")
-ggsave(here("plots", "forreri_GDM.pdf"), width = 10, height = 8, units = "in")
+ggsave(here("plots", "Fig5B_forreri_GDM.pdf"), width = 10, height = 8, units = "in")
 
 # Plot vector loadings for sig vars
 gdm_plot_vars(map$pcaSamp, 
@@ -322,5 +316,5 @@ gdm_plot_vars(map$pcaSamp,
               display_axes = TRUE, 
               x = "PC1", 
               y = "PC2")
-ggsave(here("plots", "forreri_GDM_loadings.pdf"), width = 4, height = 4, units = "in")
+ggsave(here("plots", "Fig5B_forreri_GDM_loadings.pdf"), width = 4, height = 4, units = "in")
 

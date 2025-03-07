@@ -12,8 +12,8 @@ library(here)
 
 # Import and join data ----------------------------------------------------
 
-miss <- read_tsv(here("data", "pooled_missing.txt"), col_names = TRUE)
-freqs <- read_tsv(here("data", "pooled_statefreqs.txt"), col_names = TRUE)
+miss <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "pooled_missing.txt"), col_names = TRUE)
+freqs <- read_tsv(here("data", "2_Data_processing", "data_files_input_into_scripts", "pooled_statefreqs.txt"), col_names = TRUE)
 
 # Join datasets by sample ID and remove samples that have way too much missing data
 # Some of the basefreqs have NA values which is why we'll do a left_join

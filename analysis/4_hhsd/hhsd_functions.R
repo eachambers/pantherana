@@ -7,8 +7,10 @@
 #' @returns
 #' @export
 retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
+  path_admix = here("data", "3_Analyses", "2_popgen")
   if (dataset_name == "forreri") {
-    forreri <- import_admix_data(path = here("data", "admixture"), prefix = "forreri_0.25miss_ldp", K_values = 5)
+    forreri <- import_admix_data(path = paste0(path_admix, "/forreri/"), 
+                                 prefix = "forreri_0.25miss_ldp", K_values = 5)
     dat <- forreri$dat$K5
     kcols <-
       dat %>% 
@@ -24,7 +26,8 @@ retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
                                       max_K == "X5" ~ "gray30"))
   }
   if (dataset_name == "mxpl") {
-    atlmx <- import_admix_data(path = here("data", "admixture"), prefix = "ATL_MXPL_relaxed_0.25miss_ldp", K_values = 6)
+    atlmx <- import_admix_data(path = paste0(path_admix, "/ATL_MXPL/"), 
+                               prefix = "ATL_MXPL_relaxed_0.25miss_ldp", K_values = 6)
     dat = atlmx$dat$K6
     kcols <-
       dat %>% 
@@ -45,7 +48,8 @@ retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
   }
     
   if (dataset_name == "foothills") {
-    pacmx <- import_admix_data(path = here("data", "admixture"), prefix = "new_PACMX_relaxed_0.25miss_ldp", K_values = 6)
+    pacmx <- import_admix_data(path = paste0(path_admix, "/PACMX/"), 
+                               prefix = "new_PACMX_relaxed_0.25miss_ldp", K_values = 6)
     dat = pacmx$dat$K6
     yava_samps <- c("T14298_Ryav_OUT", "T14438_OUT", "T3447_yava_OUT", "T3449_yava_OUT")
     aten_short <- c("T2020_Aten_PAC", "T2022_Aten_PAC", "T2024_PAC", "T2025_PAC")
@@ -77,13 +81,11 @@ retrieve_hhsd_coding <- function(dataset_name, save_imap = FALSE) {
                                       Bioinformatics_ID %in% aten_long ~ "#428b9b"))
     kcols <- bind_rows(kcols1, kcols2)
   }
-  if (save_imap) write_tsv(kcols %>% dplyr::select(Bioinformatics_ID, pop), paste0(here("data", "hhsd"), "/", dataset_name, "-Imap.txt"), col_names = FALSE)
+  if (save_imap) write_tsv(kcols %>% dplyr::select(Bioinformatics_ID, pop), paste0(here("data", "3_Analyses", "3_hhsd"), "/", dataset_name, "/input_files/", dataset_name, "-Imap.txt"), col_names = FALSE)
   return(kcols)
 }
 
 #' Builds figure with HHSD results with gdi and HPDs, faceted on migprior params
-#' TODO add hline separating different assemblies/algorithms?
-#' TODO implement two-level faceting for migpriors == multiple
 #'
 #' @param dat tidy HHSD "decision.csv" results, see `hhsd.R` for how to generate
 #' @param migpriors number of migpriors provided; will be how plot is faceted. Options are "single" or "multiple"

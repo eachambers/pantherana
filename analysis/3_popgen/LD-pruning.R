@@ -97,8 +97,8 @@ snps_to_ldprune <- function(path, name, method = "plink", keepsmall = FALSE){
 # Run above function ------------------------------------------------------
 
 # Should end up with the same number of SNPs as loci
-snps_to_ldprune(path = here("data"), name = "ATL_MXPL_relaxed_0.25miss")
-snps_to_ldprune(path = here("data"), name = "new_CENTAM_relaxed_0.25miss")
-snps_to_ldprune(path = here("data"), name = "new_PACMX_relaxed_0.25miss")
-snps_to_ldprune(path = here("data"), name = "forreri_0.25miss", method = "vcftools", keepsmall = TRUE)
+snps_to_ldprune(path = here("data", "2_popgen", "ATL_MXPL", "input_files"), name = "ATL_MXPL_relaxed_0.25miss")
+snps_to_ldprune(path = here("data", "2_popgen", "CENTAM", "input_files"), name = "new_CENTAM_relaxed_0.25miss")
+snps_to_ldprune(path = here("data", "2_popgen", "PACMX", "input_files"), name = "new_PACMX_relaxed_0.25miss")
+snps_to_ldprune(path = here("data", "2_popgen", "forreri", "input_files"), name = "forreri_0.25miss", method = "vcftools", keepsmall = TRUE)
 

@@ -27,7 +27,7 @@ theme_set(theme_cowplot())
 ##            *_metadata files for assemblies
 ##            *_order.txt for assemblies which specifies how inds are ordered in barplots
 
-source(here("data_viz", "Pop_gen_functions.R"))
+source(here("data_viz", "pop_gen_functions.R"))
 source(here("data_viz", "rana_colors.R"))
 
 
@@ -39,19 +39,19 @@ source(here("data_viz", "rana_colors.R"))
 # determine which K-values are the highest (`max_K` column) and what those values 
 # are (`max_K_val` column) for each sample.
 
-atlmx <- import_admix_data(path = here("data", "admixture"), 
+atlmx <- import_admix_data(path = here("data", "3_Analyses", "2_popgen", "ATL_MXPL"), 
                            prefix = "ATL_MXPL_relaxed_0.25miss_ldp",
                            K_values = c(3, 4, 5, 6, 7))
 
-centam <- import_admix_data(path = here("data", "admixture"), 
+centam <- import_admix_data(path = here("data", "3_Analyses", "2_popgen", "CENTAM"), 
                             prefix = "new_CENTAM_relaxed_0.25miss_ldp", 
                             K_values = c(3, 4, 5, 6, 7))
 
-pacmx <- import_admix_data(path = here("data", "admixture"), 
+pacmx <- import_admix_data(path = here("data", "3_Analyses", "2_popgen", "PACMX"), 
                            prefix = "new_PACMX_relaxed_0.25miss_ldp", 
                            K_values = c(4, 5, 6, 7, 8, 9, 10))
 
-forreri <- import_admix_data(path = here("data", "admixture"), 
+forreri <- import_admix_data(path = here("data", "3_Analyses", "2_popgen", "forreri"), 
                              prefix = "forreri_0.25miss_ldp", 
                              K_values = c(2, 3, 4, 5, 6))
 
@@ -94,8 +94,8 @@ dat = pacmx$dat$K9
 if (dataset_name == "ATL_MXPL") dat <- dat %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
 
 K_value = ncol(dat)-5
-kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
-indorder <- read_tsv(paste0(here("data"), "/", dataset_name, "_order.txt"), col_names = TRUE)
+kcols <- retrieve_kcols(K_value = K_value, analysis = "admixture", dataset_name)
+indorder <- read_tsv(paste0(here("data", "4_Data_visualization", "data_files_input_into_scripts"), "/", dataset_name, "_order.txt"), col_names = TRUE)
 
 if (dataset_name == "ATL_MXPL") indorder <- indorder %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
 
@@ -111,6 +111,7 @@ build_str_plot(dat = dat,
                output_path = here("plots")) # export 12x7
 ggsave(paste0(here("plots"), "/", dataset_name, "_strplot.pdf"), width = 12, height = 7, units = "in")
 
+
 # (4) Plot pie charts on map ----------------------------------------------
 
 # Import data -------------------------------------------------------------
@@ -124,9 +125,9 @@ dat = pacmx$dat$K9
 dataset_name = "PACMX" # "forreri" "PACMX" "CENTAM" "ATL_MXPL"
 
 # Get color values
-kcols <- retrieve_kcols(K_value = ncol(dat)-5, dataset = "admixture", dataset_name)
+kcols <- retrieve_kcols(K_value = ncol(dat)-5, analysis = "admixture", dataset_name)
 # Import metadata and join with ADMIXTURE results
-metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+metadata <- read_tsv(paste0(here("data", "2_Data_processing", "data_files_input_into_scripts"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
 
 
@@ -199,6 +200,7 @@ base_map <-
   geom_point(data = final, aes(long, lat), size = 2) +
   coord_fixed()
 
+
 # Plot the pies -----------------------------------------------------------
 
 # Finally, plot the pies you've drawn on the map you've drawn
@@ -259,13 +261,14 @@ map_data %>%
   geom_text(data = obs, aes(x = long, y = lat, label = no_inds), color = "white", size = 1.5)
 
 
+# Import range maps -------------------------------------------------------
+
+ranges <- import_range_maps(path = here("data", "4_Data_visualization", "data_files_input_into_scripts", "range_maps"))
+
+
 # Plot forreri with range + type localities -------------------------------
 
-shp <- maptools::readShapePoly("forreri_58599/species_58599.shp")
-forrrange <- fortify(shp)
-sp6 <- maptools::readShapePoly("sp6/species d (sp.6).shp")
-sp6range <- fortify(sp6)
-tls <- read_tsv(here("data", "forreri_typelocalities.txt"), col_names = TRUE)
+tls <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "forreri_typelocalities.txt"), col_names = TRUE)
 
 # Build base map:
 base_map_sites <-
@@ -273,12 +276,11 @@ base_map_sites <-
   ggplot() +
   geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.25) + # color = "#969696" if CENTAM
   theme_map() +
-  geom_polygon(data = forrrange, aes(long, lat, group = group), fill = "#73806d", alpha = 0.5) +
-  geom_polygon(data = sp6range, aes(long, lat, group = group), fill = "#73806d", alpha = 0.5) +
+  geom_sf(data = ranges$forr, fill = "#73806d", color = NA, alpha = 0.5) +
   geom_segment(data = sites, aes(x = long, y = lat, xend = new_long, yend = new_lat), linewidth = 0.75) +
   geom_point(data = sites, aes(long, lat), size = 2) +
   geom_point(data = tls, aes(Longitude, Latitude), size = 2, color = "red")
-  coord_fixed()
+  coord_sf()
 
 # Plot pies on base map:
 list(base_map_sites, pies_to_add$drawn_pies) %>% 
@@ -287,41 +289,21 @@ list(base_map_sites, pies_to_add$drawn_pies) %>%
 
 # Plot PACMX with ranges --------------------------------------------------
 
-# TODO switch below to using function
-yava <- maptools::readShapePoly("pacmx_ranges/species_19181.shp")
-yava <- fortify(yava)
-magn <- maptools::readShapePoly("pacmx_ranges/species_58656.shp")
-magn <- fortify(magn)
-forr <- maptools::readShapePoly("pacmx_ranges/species_58599.shp")
-forr <- fortify(forr)
-sp6 <- maptools::readShapePoly("pacmx_ranges/species d (sp.6).shp")
-sp6range <- fortify(sp6)
-omil <- maptools::readShapePoly("pacmx_ranges/species_58687.shp")
-omil <- fortify(omil)
-spec <- maptools::readShapePoly("pacmx_ranges/species_58722.shp")
-spec <- fortify(spec)
-tayl <- maptools::readShapePoly("pacmx_ranges/species_58732.shp")
-tayl <- fortify(tayl)
-macro <- maptools::readShapePoly("pacmx_ranges/data_0.shp")
-macro <- fortify(macro)
-brown <- maptools::readShapePoly("pacmx_ranges/browndata_0.shp")
-brown <- fortify(brown)
-
-tls <- read_tsv(here("data", "PACMX_typelocalities.txt"), col_names = TRUE)
+tls <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "PACMX_typelocalities.txt"), col_names = TRUE)
+map_colors <- mapping_colors(path_to_tls = here("data", "4_Data_visualization", "data_files_input_into_scripts", "type_localities_rec.txt"))
 
 ggplot() +
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = "#e6e6e6", linewidth = 0.25) + # color = "#969696" if CENTAM
   theme_map() +
-  geom_polygon(data = forr, aes(long, lat, group = group), fill = "#73806d", alpha = 0.75) +
-  geom_polygon(data = sp6range, aes(long, lat, group = group), fill = "#73806d", alpha = 0.75) +
-  geom_polygon(data = yava, aes(long, lat, group = group), fill = "#054051", alpha = 0.75) +
-  geom_polygon(data = magn, aes(long, lat, group = group), fill = "#f7cd5e", alpha = 0.75) +
-  geom_polygon(data = omil, aes(long, lat, group = group), fill = "#ba94a6", alpha = 0.75) +
-  geom_polygon(data = spec, aes(long, lat, group = group), fill = "#80a4bc", alpha = 0.75) +
-  geom_polygon(data = macro, aes(long, lat, group = group), fill = "#e0895a", alpha = 0.75) +  
-  geom_polygon(data = brown, aes(long, lat, group = group), fill = "#e0895a", alpha = 0.75) +  
+  geom_sf(data = ranges$forr, color = NA, fill = "#73806d", alpha = 0.75) +
+  geom_sf(data = ranges$yava, color = NA, fill = "#054051", alpha = 0.75) +
+  geom_sf(data = ranges$magn, color = NA, fill = "#f7cd5e", alpha = 0.75) +
+  geom_sf(data = ranges$omil, color = NA, fill = "#ba94a6", alpha = 0.75) +
+  geom_sf(data = ranges$spec, color = NA, fill = "#80a4bc", alpha = 0.75) +
+  geom_sf(data = ranges$macro1, color = NA, fill = "#e0895a", alpha = 0.75) +  
+  geom_sf(data = ranges$macro2, color = NA, fill = "#e0895a", alpha = 0.75) +  
   geom_point(data = tls, aes(Longitude, Latitude), size = 2, color = "red") +
-  coord_fixed() +
+  coord_sf() +
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
 
 
@@ -334,8 +316,8 @@ dat_pacmx = pacmx$dat$K9
 dat <- dat_pacmx
 dataset_name = "PACMX"
 
-kcols <- retrieve_kcols(ncol(dat)-5, dataset = "admixture", dataset_name)
-metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+kcols <- retrieve_kcols(ncol(dat)-5, analysis = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data", "2_Data_processing", "data_files_input_into_scripts"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
 
 yava_forr_naya_inds <- c("V2790_PAC", "V2791_PAC", "V2792_PAC", "V2793_PAC", "V2794_PAC", "V2798_PAC", "V2800_PAC", "V2799_PAC")
@@ -373,15 +355,13 @@ min(forr_macro$max_K_val)
 
 # (7) Build inset sympatric locality structure plots ----------------------
 
-# TODO check below stuff is consistent with above
-
 dataset_name = "PACMX" # "PACMX" / "CENTAM"
 
 # if (dataset_name == "ATL_MXPL") dat <- dat %>% dplyr::filter(Bioinformatics_ID != "IRL57_LCA")
 K_value = ncol(dat)-5
-kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
-metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
-sites <- read_tsv(paste0(here("data"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
+kcols <- retrieve_kcols(K_value, analysis = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data", "2_Data_processing", "data_files_input_into_scripts"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+sites <- read_tsv(paste0(here("data", "4_Data_visualization", "data_files_input_into_scripts"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
 
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
 final <- left_join(final, sites)
@@ -436,9 +416,9 @@ gueoax <- mxstate.map %>% dplyr::filter(id == 12 | id == 20)
 
 dataset_name = "PACMX"
 K_value = ncol(dat)-5
-kcols <- retrieve_kcols(K_value, dataset = "admixture", dataset_name)
-metadata <- read_tsv(paste0(here("data"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
-sites <- read_tsv(paste0(here("data"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
+kcols <- retrieve_kcols(K_value, analysis = "admixture", dataset_name)
+metadata <- read_tsv(paste0(here("data", "2_Data_processing", "data_files_input_into_scripts"), "/", dataset_name, "_metadata.txt"), col_names = TRUE)
+sites <- read_tsv(paste0(here("data", "4_Data_visualization", "data_files_input_into_scripts"), "/", dataset_name, "_sites.txt"), col_names = TRUE)
 
 final <- left_join(dat, metadata, by = "Bioinformatics_ID")
 gro <- left_join(final, sites) %>% 
