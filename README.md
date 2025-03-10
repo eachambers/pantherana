@@ -81,25 +81,25 @@ Files are available within the `analysis/6_feems` directory [here](https://githu
     - Script to generate the spatial graph and run the cross-validation analysis of FEEMS
 
 ## Data visualization
-* [Making maps](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R); uses functions imported from [`Mapping_functions.R`](https://github.com/eachambers/pantherana/blob/main/R/mapping_functions.R), [`rana_colors.R`](https://github.com/eachambers/pantherana/blob/main/R/rana_colors.R), and [`hhsd_functions.R`](https://github.com/eachambers/pantherana/blob/main/R/hhsd_functions.R)
-    - Make range maps, with and without type localities indicated. Used for **Figs. 1C, 2A,** and **3A**
-    - Make map of localities for HHSD analysis, color-coded to Imap population assignment: **Fig. 4**
-    - Make DEM map of Mexico with biogeographic provinces plotted: **Fig. S3**
-* [Population structure results](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R); uses functions imported from [`Pop_gen_functions.R`](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_functions.R) and [`rana_colors.R`](https://github.com/eachambers/pantherana/blob/main/R/rana_colors.R)
-    - Plot CV error: **Fig. S5 (top)**
-    - Build structure-style plots for all K values: **Figs. 2B, 2C, 3B, 3C,** and **S5 (bottom)**
-    - Plot pie charts of admixture results on maps: **Figs. 2B, 2C, 3B,** and **3C**
-    - Identify sympatric localities and calculate distances between them
-    - Build structure-style plots for sympatric localities: **Figs. 2C** and **3C**
-* [Landscape genomics results](https://github.com/eachambers/pantherana/blob/main/R/Land_gen.R); uses functions imported from [`Land_gen_functions.R`](https://github.com/eachambers/pantherana/blob/main/R/Land_gen_functions.R)
-    - Plot Mantel test results: **Fig. S6**
-    - Plot MMRR results: **Fig. 5A**
-    - Plot GDM results: **Fig. 5B**
-* [Environmental data results](https://github.com/eachambers/pantherana/blob/main/R/Env_data.R)
-    - Plot environmental PC3: **Fig. S7A**
-    - Plot loadings for environmental PC3: **Fig. S7B**
-* [Gene flow results](https://github.com/eachambers/pantherana/blob/main/R/fEEMS.R)
-    - Plot FEEMS results: **Fig. 5C**
-    - Plot FEEMS cross-validation analysis results: **Fig. S8**
-* [Rana taxonomic history](https://github.com/eachambers/pantherana/blob/main/R/rana_taxonomy.R)
-    - Plot taxonomic history of the leopard frog complex: **Fig. S2**
+
+| Figure | Script | Description
+| -------- | ------------- | ------------ |
+| **Fig. 1C** | [Mapping.R](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R) | Range maps, without type localities |
+| **Fig. 2A** | [Mapping.R](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R) | Range maps, with type localities indicated |
+| **Fig. 2B** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Build structure-style plots for all K values |
+| **Fig. 2C** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Build structure-style plots for all K values, pie charts of admixture results on maps, and build structure-style plots for sympatric localities |
+| **Fig. 3A** | [Mapping.R](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R) | Range maps, with type localities indicated |
+| **Fig. 3B** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Build structure-style plots for all K values and pie charts of admixture results on maps |
+| **Fig. 3C** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Build structure-style plots for all K values, pie charts of admixture results on maps, and build structure-style plots for sympatric localities |
+| **Fig. 4** | [Mapping.R](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R) | Map of localities for HHSD analysis, color-coded to Imap population assignment |
+| **Fig. 5A** | [land_gen.R](https://github.com/eachambers/pantherana/blob/main/R/Land_gen.R) | Plot MMRR results |
+| **Fig. 5B** | [land_gen.R](https://github.com/eachambers/pantherana/blob/main/R/Land_gen.R) | Plot GDM results |
+| **Fig. 5C** | [feems.R](https://github.com/eachambers/pantherana/blob/main/R/fEEMS.R) | Plot FEEMS results |
+| **Fig. S2** | [rana_taxonomy.R](https://github.com/eachambers/pantherana/blob/main/R/rana_taxonomy.R) | Plot taxonomic history of the leopard frog complex |
+| **Fig. S3** | [Mapping.R](https://github.com/eachambers/pantherana/blob/main/R/Mapping.R) | DEM map of Mexico with biogeographic provinces plotted |
+| **Fig. S5 (top)** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Plot CV error from admixture analysis |
+| **Fig. S5 (bottom)** | [Pop_gen_figures.R](https://github.com/eachambers/pantherana/blob/main/R/Pop_gen_figures.R) | Build structure-style bar plots of all relevant K values tested |
+| **Fig. S6** | [land_gen.R](https://github.com/eachambers/pantherana/blob/main/R/Land_gen.R) | Plot Mantel test results |
+| **Fig. S7A** | [env_data.R](https://github.com/eachambers/pantherana/blob/main/R/Env_data.R) | Plot environmental PC3 |
+| **Fig. S7B** | [env_data.R](https://github.com/eachambers/pantherana/blob/main/R/Env_data.R) | Plot loadings for environmental PC3 |
+| **Fig. S8** | [feems.R](https://github.com/eachambers/pantherana/blob/main/R/fEEMS.R) | Plot FEEMS cross-validation analysis results |
