@@ -8,7 +8,7 @@ This repository contains code for analyses and data visualization from:
 
 This paper provided a suggested framework for testing whether genetic variation arises through species boundaries or intraspecific geographic variation and focused on species in the leopard frog species complex (*Rana pipiens*) in Mexico and Central America. All raw data and input files can be found on Dryad [here](https://doi.org/10.5061/dryad.cjsxksnhc), and raw, demultiplexed fastqs can be found on SRA (BioProject PRJNA1233814).
 
-To run code in this repository, download files within the two data input file directories on Dryad (`2_Data_processing/data_files_input_into_scripts` and `4_Data_visualization/data_files_input_into_scripts`) and dump them all into the [data](https://github.com/eachambers/pantherana/tree/main/data) directory. Any resulting plots from these scripts will be dumped into the `plots` directory.
+To run code in this repository, download the supplementary data files available on Dryad and dump them all into the [data](https://github.com/eachambers/pantherana/tree/main/data) directory. Any resulting plots from these scripts will be dumped into the `plots` directory.
 
 **Assembly nomenclature:**
 
