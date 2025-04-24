@@ -1,14 +1,12 @@
 # Distinguishing species boundaries from geographic variation
 
-***This manuscript is currently in review; therefore, we discourage the use of the following code at this time.***
-
 This repository contains code for analyses and data visualization from:
 
-**Chambers EA, Lara-Tufiño JD, Campillo-García G, Cisneros-Bernal AY, Dudek Jr. DJ, León-Règagnon V, Townsend JH, Flores-Villela O, & Hillis DM. (XXX) Distinguishing species boundaries from geographic variation. *XXX*, [DOI](LINKTODOI).**
+**Chambers EA, Lara-Tufiño JD, Campillo-García G, Cisneros-Bernal AY, Dudek Jr. DJ, León-Règagnon V, Townsend JH, Flores-Villela O, & Hillis DM. (2025) Distinguishing species boundaries from geographic variation. *Proceedings of the National Academy of Sciences USA*, [DOI](LINKTODOI).**
 
-This paper provided a suggested framework for testing whether genetic variation arises through species boundaries or intraspecific geographic variation and focused on species in the leopard frog species complex (*Rana pipiens*) in Mexico and Central America. All raw data and input files can be found on Dryad [here](https://doi.org/10.5061/dryad.cjsxksnhc), and raw, demultiplexed fastqs can be found on SRA (BioProject PRJNA1233814).
+This paper provided a suggested framework for testing whether genetic variation arises through species boundaries or intraspecific geographic variation and focused on species in the leopard frog species complex (*Rana pipiens*) in Mexico and Central America. All raw data and input files can be found on Dryad [here](https://doi.org/10.5061/dryad.cjsxksnhc), and raw, demultiplexed fastqs can be found on SRA ([BioProject PRJNA1233814](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1233814)).
 
-To run code in this repository, download the supplementary data files available on Dryad and dump them all into the [data](https://github.com/eachambers/pantherana/tree/main/data) directory. Any resulting plots from these scripts will be dumped into the `plots` directory.
+To run code in this repository, download the supplementary data files available on Dryad and dump them all into the [data](https://github.com/eachambers/pantherana/tree/main/data) directory. Shapefiles for ranges and Mexican ecoregions must be downloaded externally due to copyright restrictions. Any resulting plots from these scripts will be dumped into the `plots` directory.
 
 **Assembly nomenclature:**
 
