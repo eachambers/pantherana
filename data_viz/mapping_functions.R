@@ -5,10 +5,12 @@ import_range_maps <- function(path) {
   omil <- sf::st_read(paste0(path, "/new_omiltemana_wpapa/species_58687.shp"))
 
   tls <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "type_localities_rec.txt"))
-  aten_short <- tls %>% 
+  aten_short <- tls %>%
     filter(Species == "Aten_short_other" | Species == "Atenquique_short")
-  aten_long <- tls %>% 
+  aten_long <- tls %>%
     filter(Species == "Atenquique_long")
+  # aten_short = NULL
+  # aten_long = NULL
   
   # CENTAM species
   lenca <- sf::st_read(paste0(path, "/lenca_handmade/species_58653.shp"))

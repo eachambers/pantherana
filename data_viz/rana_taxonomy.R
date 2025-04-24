@@ -25,8 +25,8 @@ plot <-
              alpha = 0.5, fill = "#f39e87") +
     annotate("rect", xmin = 2000, xmax = 2026, ymin = 0, ymax = 33,
              alpha = 0.5, fill = "#88a1c6") +
-  geom_line(aes(x = Year, y = To_plot), color = "red") +
-  geom_line(aes(x = Year, y = Cumulative_recognized_today)) +
+  geom_line(aes(x = Year, y = To_plot), color = "black") +
+  # geom_line(aes(x = Year, y = Cumulative_recognized_today)) +
   ylab("Number of species") +
   scale_x_continuous(limits = c(1780, 2026), breaks = seq(1780, 2026, by = 20), expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0)) +

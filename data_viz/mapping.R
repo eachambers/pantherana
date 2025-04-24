@@ -6,7 +6,6 @@ library(cowplot)
 library(elevatr)
 library(mxmaps)
 library(tidyterra)
-# library(rgdal)
 library(viridis)
 theme_set(theme_cowplot())
 
@@ -19,9 +18,9 @@ source(here("data_viz", "rana_colors.R"))
 ##    (1) Imports coordinates
 ##    (2) Imports map data
 ##    (3) Range maps: Figs. 1C, 2A, and 3A
-##    (4) Fig. S3: Builds map of elevation with MX biogeographic regions and state boundaries
-##    (4) Map environmental PCs
-##    (5) forreri type localities
+##    (4) Fig. 4: HHSD sampling
+##    (5) Fig. S3: Builds map of elevation with MX biogeographic regions and state boundaries
+##    (6) forreri type localities
 ##    (7) Plots the Plateau of Guatemala (for R. macroglossa type locality)
 
 ##    FILES REQUIRED:
@@ -51,9 +50,8 @@ coords %>%
   filter(duplicated(.[["Bioinformatics_ID"]])) # should be empty
 
 
-# Import map data ---------------------------------------------------------
+# (2) Import map data -----------------------------------------------------
 
-# 33.486042, -119.324656
 x = c(-119.32, max(coords$x), -119.32, max(coords$x))
 y = c(33.486, 33.486, min(coords$y), min(coords$y))
 bounds <- data.frame(x, y)
@@ -85,7 +83,13 @@ palette <- rev(palette)
 
 ## Build background map
 world <- map_data("world")
-centamer <- filter(world, region == "Mexico" | region == "Belize" | region == "Guatemala" | region == "Honduras" | region == "Nicaragua" | region == "Costa Rica" | region == "Panama" | region == "El Salvador")
+centamer <- filter(world, region == "Belize" | region == "Guatemala" | region == "Honduras" | region == "Nicaragua" | region == "Costa Rica" | region == "Panama" | region == "El Salvador")
+
+relevant_countries <- filter(world, region == "USA" | region == "Mexico" | region == "Belize" | region == "Guatemala" | region == "Honduras" | region == "Nicaragua" | region == "Costa Rica" | region == "Panama" | region == "El Salvador")
+relevant_countries <- relevant_countries %>% 
+  filter(lat >= min(centamer$lat) | lat <= 36.97) %>% 
+  filter(long >= min(usa$long)) %>% 
+  filter(long <= max(usa$long))
 
 # Load Mexico state map using mxmaps package
 data("mxstate.map")
@@ -97,7 +101,7 @@ map_data <-
 usa <- map_data("state")
 
 
-# Range maps --------------------------------------------------------------
+# (3) Range maps ----------------------------------------------------------
 
 # Read in all range map shapefiles
 ranges <- import_range_maps(path = here("data", "4_Data_visualization", "data_files_input_into_scripts", "range_maps"))
@@ -107,30 +111,41 @@ tls <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scri
 spp_colors <- mapping_colors(here("data", "4_Data_visualization", "data_files_input_into_scripts", "type_localities_rec.txt"))
 
 # Make range map
-p_ranges <-
+# p_ranges <-
   ggplot() +
   geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") + # color = "#969696" if CENTAM
   geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = NA, fill = "#e6e6e6") +
   theme_map() +
-  # forreri
-  geom_sf(data = ranges$forr, fill = spp_colors$forr, color = NA, alpha = 0.75) +
   # foothills species
   geom_sf(data = ranges$yava, color = NA, fill = spp_colors$yava, alpha = 0.75) +
   geom_sf(data = ranges$magn, color = NA, fill = spp_colors$magn, alpha = 0.75) +
+  # forreri
+  geom_sf(data = ranges$forr, fill = spp_colors$forr, color = NA, alpha = 0.75) +
+  # foothills continued
   geom_sf(data = ranges$omil, color = NA, fill = spp_colors$omil, alpha = 0.75) +
-  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), fill = "#428b9b", color = "black", pch = 21) +
-  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), fill = "#c0a06f", color = "black", pch = 21) +
   # ATL_MXPL species
   geom_sf(data = ranges$berl, color = NA, fill = spp_colors$berl, alpha = 0.75) +
   geom_sf(data = ranges$macro1, color = NA, fill = spp_colors$macro, alpha = 0.75) +
-  geom_sf(data = ranges$macro2, color = NA, fill = spp_colors$macro, alpha = 0.75) +
+  # geom_sf(data = ranges$macro2, color = NA, fill = spp_colors$macro, alpha = 0.75) +
+  geom_sf(data = macro_uncertain, color = NA, fill = spp_colors$macro, alpha = 0.75) +
   geom_sf(data = ranges$spec, color = NA, fill = spp_colors$spec, alpha = 0.75) +
   # CENTAM species
   geom_sf(data = ranges$spnov, color = NA, fill = spp_colors$spnov, alpha = 0.75) +
   geom_sf(data = ranges$lenca, color = NA, fill = spp_colors$lenca, alpha = 0.75) +
-  coord_sf(ylim = c(min(centamer$lat), 36.97)) + # maxx = -82.13
+  # coord_sf(ylim = c(min(centamer$lat), 36.97)) +
+  coord_sf(ylim = c(min(centamer$lat), 35.5),
+           xlim = c(-115.25, -81.75)) +
+  # Add state outlines on top of ranges
   geom_polygon(data = usa, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) + # color = "#969696" if CENTAM
-  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25)
+  geom_polygon(data = map_data, aes(x = long, y = lat, group = group), color = "white", fill = NA, linewidth = 0.25) +
+  # Add new species points
+  geom_point(data = ranges$aten_long, aes(x = Longitude, y = Latitude), fill = "#428b9b", color = "black", pch = 21) +
+  geom_point(data = ranges$aten_short, aes(x = Longitude, y = Latitude), fill = "#c0a06f", color = "black", pch = 21)
+
+# Add country-level outlines
+p_ranges + 
+  geom_polygon(data = relevant_countries, aes(x = long, y = lat, group = group), color = "grey40", fill = NA, linewidth = 0.5)
+# 4 x 3.63
 
 # Add type localities of recognized and unrecognized species on to map
 p_ranges +
@@ -156,7 +171,7 @@ p_ranges +
 #   geom_point(data = allsamps, aes(x = Longitude, y = Latitude), shape = 1, color = "black", size = 1)
   
 
-# Fig. 4: HHSD sampling ---------------------------------------------------
+# (4) Fig. 4: HHSD sampling -----------------------------------------------
 
 dataset_name = "forreri" # forreri / foothills / mxpl
 
@@ -192,7 +207,7 @@ p_base +
   coord_fixed(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 
-# Fig. S3: DEM with biogeo provinces --------------------------------------
+# (5) Fig. S3: DEM with biogeo provinces ----------------------------------
 
 # Import biogeographic provinces of Mexico which were downloaded here: http://geoportal.conabio.gob.mx/metadatos/doc/html/rbiog4mgw.html
 provinces <- sf::st_read(here("data", "4_Data_visualization", "data_files_input_into_scripts", "biogeo_provinces_mx", "rbiog4mgw.shp"))
@@ -208,7 +223,7 @@ ggplot() +
   geom_polygon(data = centamer %>% dplyr::filter(region == "Mexico"), aes(x = long, y = lat, group = group), color = "black", fill = NA, linewidth = 0.5)
 
 
-# forreri type localities -------------------------------------------------
+# (6) forreri type localities ---------------------------------------------
 
 # Read in type localities
 types <- read_tsv(here("data", "4_Data_visualization", "data_files_input_into_scripts", "forreri_typelocalities.txt"), col_names = TRUE)
@@ -236,7 +251,7 @@ base_map <-
   coord_fixed()
 
 
-# Plateau of Guatemala ----------------------------------------------------
+# (7) Plateau of Guatemala ------------------------------------------------
 
 guat <- filter(world, region == "Guatemala")
 xguat = c(min(guat$long)-1, max(guat$long)+1, min(guat$long)-1, max(guat$long)+1)
