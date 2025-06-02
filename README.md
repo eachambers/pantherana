@@ -2,7 +2,7 @@
 
 This repository contains code for analyses and data visualization from:
 
-**Chambers EA, Lara-Tufiño JD, Campillo-García G, Cisneros-Bernal AY, Dudek Jr. DJ, León-Règagnon V, Townsend JH, Flores-Villela O, & Hillis DM. (2025) Distinguishing species boundaries from geographic variation. *Proceedings of the National Academy of Sciences USA*, [DOI](LINKTODOI).**
+**Chambers EA, Lara-Tufiño JD, Campillo-García G, Cisneros-Bernal AY, Dudek Jr. DJ, León-Règagnon V, Townsend JH, Flores-Villela O, & Hillis DM. (2025) Distinguishing species boundaries from geographic variation. *Proceedings of the National Academy of Sciences USA*, [DOI](https://doi.org/10.1073/pnas.2423688122).**
 
 This paper provided a suggested framework for testing whether genetic variation arises through species boundaries or intraspecific geographic variation and focused on species in the leopard frog species complex (*Rana pipiens*) in Mexico and Central America. All raw data and input files can be found on Dryad [here](https://doi.org/10.5061/dryad.cjsxksnhc), and raw, demultiplexed fastqs can be found on SRA ([BioProject PRJNA1233814](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1233814)).
 
